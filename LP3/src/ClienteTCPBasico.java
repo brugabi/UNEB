@@ -2,9 +2,11 @@ import javax.swing.*;
 import java.net.*;
 import java.io.*;
 import java.util.Date;
+import java.util.ArrayList;
 
 public class ClienteTCPBasico {
     public static void main(String[] args) {
+
         try{
                 Socket cliente = new Socket("localhost",12345);
                 ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());

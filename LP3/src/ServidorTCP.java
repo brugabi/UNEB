@@ -1,9 +1,17 @@
 import java.net.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class ServidorTCP {
     public static void main(String[] args) {
+        Agenda clientes1 = new Agenda("Pedro", "pedroalvares@gmail.com", "696662424");
+        Agenda clientes2 = new Agenda("Joao", "joaocristo@gmail.com", "3131");
+        Agenda clientes3 = new Agenda("Carla", "carlaperez@loiratchan.com", "717171");
+        ArrayList<Agenda> clientes = new ArrayList<Agenda>();
+        clientes.add(clientes1);
+        clientes.add(clientes2);
+        clientes.add(clientes3);
 
         try {
             ServerSocket servidor = new ServerSocket(12345);
