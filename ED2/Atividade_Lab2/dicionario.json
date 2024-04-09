@@ -1,0 +1,31 @@
+{
+"Ana": {
+"Cargo": "Dev",
+"Salario": 10000,
+"Relacionamento": [
+"Joao",
+"Maria"
+]
+},
+"Joao": {
+"Cargo": "Suporte",
+"Salario": "3000",
+"Relacionamento": []
+},
+"Maria": {
+"Cargo": "Analista",
+"Salario": "20000",
+"Relacionamento": [
+"Ana",
+"Joao"
+]
+},
+"Pedro": {
+"Cargo": "Cientista",
+"Salario": "16000",
+"Relacionamento": [
+"Joao",
+"Maria"
+]
+}
+}
