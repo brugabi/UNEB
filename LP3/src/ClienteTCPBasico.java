@@ -3,6 +3,7 @@ import java.net.*;
 import java.io.*;
 import java.util.Date;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class ClienteTCPBasico {
     public static void main(String[] args) {
@@ -10,9 +11,12 @@ public class ClienteTCPBasico {
         try{
                 Socket cliente = new Socket("localhost",12345);
                 ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());
-                Date data_atual = (Date)entrada.readObject();
-                JOptionPane.showMessageDialog(null, "Data recebida: do servidor: " + data_atual.toString());
+                ObjectOutputStream saida = new ObjectOutputStream(cliente.getOutputStream());
+                Scanner alysson = new Scanner(System.in);
+                String mensagem = alysson.nextLine();
+                saida.writeObject(mensagem);
                 entrada.close();
+                saida.close();
                 System.out.println("Conexao encerrada");
                 }
         catch(Exception e) {

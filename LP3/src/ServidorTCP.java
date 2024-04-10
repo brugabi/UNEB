@@ -5,13 +5,11 @@ import java.util.Date;
 
 public class ServidorTCP {
     public static void main(String[] args) {
-        Agenda clientes1 = new Agenda("Pedro", "pedroalvares@gmail.com", "696662424");
-        Agenda clientes2 = new Agenda("Joao", "joaocristo@gmail.com", "3131");
-        Agenda clientes3 = new Agenda("Carla", "carlaperez@loiratchan.com", "717171");
+
         ArrayList<Agenda> clientes = new ArrayList<Agenda>();
-        clientes.add(clientes1);
-        clientes.add(clientes2);
-        clientes.add(clientes3);
+        clientes.add(new Agenda("Pedro","pedroalvares@gmail.com","696662424"));
+        clientes.add(new Agenda(("Joao", "joaocristo@gmail.com", "3131"));
+        clientes.add(new Agenda("Carla", "carlaperez@loiratchan.com", "717171"));
 
         try {
             ServerSocket servidor = new ServerSocket(12345);
@@ -21,7 +19,7 @@ public class ServidorTCP {
                 System.out.println("Cliente conectado: " + cliente.getInetAddress().getHostAddress());
                 ObjectOutputStream saida = new ObjectOutputStream(cliente.getOutputStream());
                 saida.flush();
-                saida.writeObject(new Date());
+                saida.writeObject("string");
                 saida.close();
                 cliente.close();
             }
