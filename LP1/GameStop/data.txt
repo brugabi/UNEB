@@ -1,0 +1,8 @@
+Index,Name,Description,Age Ration,Quantity
+1,jogo 1,jogo 3,12,2
+2,ULAL,LAL,44,44
+3,HELANOL,UUUU,66+,13621
+4,EP,33,443,444
+5,AAA,JAKLFDJS,44,89
+6,Tristeza,LAGRIMAS DE TODOS,44,90
+7,The Legend of Zelda: Tears of the Kingdom,Zelda,Livre,55
