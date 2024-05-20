@@ -8,7 +8,7 @@ public class ServidorTCP {
 
         ArrayList<Agenda> clientes = new ArrayList<Agenda>();
         clientes.add(new Agenda("Pedro","pedroalvares@gmail.com","696662424"));
-        clientes.add(new Agenda(("Joao", "joaocristo@gmail.com", "3131"));
+        clientes.add(new Agenda("Joao", "joaocristo@gmail.com", "3131"));
         clientes.add(new Agenda("Carla", "carlaperez@loiratchan.com", "717171"));
 
         try {
