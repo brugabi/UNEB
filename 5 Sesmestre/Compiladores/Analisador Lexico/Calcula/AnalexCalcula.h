@@ -1,5 +1,5 @@
-#ifndef ANALEX
-#define ANALEX 
+#ifndef ANALEXCALCULA
+#define ANALEXCALCULA
 
 #define TAM_MAX_LEXEMA 31
 
