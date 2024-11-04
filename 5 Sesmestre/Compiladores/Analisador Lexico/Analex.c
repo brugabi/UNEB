@@ -135,6 +135,7 @@ TOKEN AnaLex (FILE *fd) {
             else{
                 estado = 31; //ACABOU O ID
                 ungetc(c, fd);
+                //VERIFICAR PALAVRA RESERVADA TALVEZ AQUI?
                 t.cat = ID;
                 strcpy(t.lexema, lexema);
                 return t;
@@ -239,6 +240,7 @@ int main () {
             }
             break;
         case ID: printf("<ID, %s>\n", tk.lexema); break;
+        case PR: printf("<PR, %s>\n", tk.lexema); break;
         case CT_I: printf("<CT_I, %d>\n", tk.valINT); break;
         case CT_R: printf("<CT_R, %f>\n", tk.valREAL); break;
         case CT_C: printf("<CT_C, %c>\n", tk.charcon); break;
