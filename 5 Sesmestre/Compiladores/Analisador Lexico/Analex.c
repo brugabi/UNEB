@@ -74,14 +74,10 @@ TOKEN AnaLex (FILE *fd) {
             }
             break;
         case 5: //COMENTARIO
-            if (c == '\n' || c == EOF)
+            if (c == '\n')
             {
                 estado = 0;
                 return t;
-                if (c == EOF) {
-                    t.cat = FIM_ARQ;
-                    return t;
-                }
                 
             }
             else{
