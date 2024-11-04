@@ -14,8 +14,8 @@ enum PR {
 };
 
 //OP_OR = OPERADOR OU "||" OP_AND = OPERADOR E "&&" 
-enum SINAIS {ADICAO = 1, SUBTRACAO, MULTI, DIV, COMENT, MAIOR, MAIO_IGUAL, MENOR, MENOR_IGUAL, ATRIB, IGUALDADE, ABRE_PAR,
-                FECHA_PAR, ABRE_COL, FECHA_COL, OP_OR, ENDERECO, OP_AND, VIRGULA, NEGACAO, DIF}; 
+enum SINAIS {ADICAO = 1, SUBTRACAO, MULTI, DIV, MAIOR, MAIOR_IGUAL, MENOR, MENOR_IGUAL, ATRIB, IGUALDADE, ABRE_PAR,
+                FECHA_PAR, ABRE_COL, FECHA_COL, OP_OR, ECOM, OP_AND, VIRGULA, NEGACAO, DIF}; //ECOM = E COMERCIAL
 
 typedef struct token{
     enum TOKEN_CAT cat;
@@ -25,7 +25,7 @@ typedef struct token{
         char lexema[TAM_MAX_LEXEMA];
         char charcon;
         int valINT;
-        int valREAL; //TALVEZ N PRECISE PQ REAL = INT.INT
+        float valREAL; //TALVEZ N PRECISE PQ REAL = INT.INT
 
     };
     

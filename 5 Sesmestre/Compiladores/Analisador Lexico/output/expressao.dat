@@ -1,1 +1,23 @@
-==+-=
++ //ADD
+- //SUBTRACAO
+* //MULTI
+/ //DIV
+> //MAIOR
+>= //MAIOR IGUAL
+< //MENOR
+<= //MENOR IGUAL
+== //IGUALDADE
+= //ATRIBUICAO
+& // ECOMERCIAL
+&& //AND
+|| //OR
+, //VIRGULA
+! //negacao
+!= //diferenca
+____4underlines //ID COM UNDERLINE
+teste //COMECANDO COM LETRA
+1234 //INTEGER
+3.5 //FLOAT
+'d' //CHAR
+
+'!' //CHAR2
