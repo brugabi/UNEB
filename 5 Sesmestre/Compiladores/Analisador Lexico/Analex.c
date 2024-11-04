@@ -3,7 +3,7 @@
 #include <string.h>
 #include "Analex.h"
 
-#define TAM_LEXEMA 50
+#define TAM_LEXEMA 70
 #define TAM_NUM 20
 
 void error(char msg[]) {
@@ -61,6 +61,8 @@ TOKEN AnaLex (FILE *fd) {
             //CHAR
             else if (c == '\''){estado = 37;} //pode ser um char, um \n ou um \0
             //else error("Caracter invalido!");
+            //STRING
+            else if (c == '"') estado = 43;
             break;
         case 4: //COMENTARIO OU DIVISAO
             if (c == '/') {estado = 5;} // COMENTARIO
@@ -74,16 +76,7 @@ TOKEN AnaLex (FILE *fd) {
             }
             break;
         case 5: //COMENTARIO
-            if (c == '\n')
-            {
-                estado = 0;
-                return t;
-                
-            }
-            else{
-                lexema[tamL++] = c;
-                lexema[tamL] = '\0';
-            }
+            if (c == '\n') estado = 0;
             break;
         case 7:
             if (c == '=') {estado = 8; t.cat = SN; t.codSN = MAIOR_IGUAL; return t;} //MAIOR IGUAL
@@ -135,8 +128,11 @@ TOKEN AnaLex (FILE *fd) {
             else{
                 estado = 31; //ACABOU O ID
                 ungetc(c, fd);
-                //VERIFICAR PALAVRA RESERVADA TALVEZ AQUI?
-                t.cat = ID;
+                //VERIFICAR PALAVRA RESERVADA
+                if (is_PR(lexema) == 1) {
+                    t.cat = PR;
+                }
+                else {t.cat = ID;}
                 strcpy(t.lexema, lexema);
                 return t;
             }
@@ -200,6 +196,18 @@ TOKEN AnaLex (FILE *fd) {
             break;
         case 42: if (c =='\'') {estado=39; t.cat = CT_C; return t;}
             break;
+        case 43: 
+            if (c == '"') {
+                estado = 44;
+                t.cat = LT;
+                strcpy(t.lexema, lexema);
+                return t;
+            }
+            else if(c >= 0 && c <=127) {
+                lexema[tamL++] = c;
+                lexema[tamL] = '\0';
+            }
+            break;
         }
     }
     
@@ -244,6 +252,7 @@ int main () {
         case CT_I: printf("<CT_I, %d>\n", tk.valINT); break;
         case CT_R: printf("<CT_R, %f>\n", tk.valREAL); break;
         case CT_C: printf("<CT_C, %c>\n", tk.charcon); break;
+        case LT: printf("<LT, %s>\n", tk.lexema); break;
         case FIM_ARQ: printf("<FIM DO ARQUIVO ENCONTRADO>\n"); break;
         }
         if (tk.cat == FIM_ARQ) break; //break do while
