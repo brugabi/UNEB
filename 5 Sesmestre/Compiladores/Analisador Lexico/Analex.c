@@ -159,7 +159,6 @@ TOKEN AnaLex (FILE *fd) {
                 estado = 33;
                 ungetc(c, fd);
                 t.cat = CT_I;
-                printf("%s\n", digitos);
                 t.valINT = atoi(digitos);
                 return t;
             }

@@ -72,8 +72,8 @@
 			<final/>&#13;
 		</state>&#13;
 		<state id="13" name="q13">&#13;
-			<x>1232.0</x>&#13;
-			<y>824.0</y>&#13;
+			<x>1255.0</x>&#13;
+			<y>810.0</y>&#13;
 		</state>&#13;
 		<state id="14" name="q14">&#13;
 			<x>1447.0</x>&#13;
@@ -141,6 +141,7 @@
 			<x>794.0</x>&#13;
 			<y>915.0</y>&#13;
 			<label>VIRGULA</label>&#13;
+			<final/>&#13;
 		</state>&#13;
 		<state id="26" name="q26">&#13;
 			<x>677.0</x>&#13;
@@ -297,11 +298,6 @@
 			<read>/</read>&#13;
 		</transition>&#13;
 		<transition>&#13;
-			<from>37</from>&#13;
-			<to>38</to>&#13;
-			<read>A,,,z</read>&#13;
-		</transition>&#13;
-		<transition>&#13;
 			<from>0</from>&#13;
 			<to>4</to>&#13;
 			<read>/</read>&#13;
@@ -382,6 +378,11 @@
 			<read>A...z</read>&#13;
 		</transition>&#13;
 		<transition>&#13;
+			<from>37</from>&#13;
+			<to>38</to>&#13;
+			<read>ASCII</read>&#13;
+		</transition>&#13;
+		<transition>&#13;
 			<from>10</from>&#13;
 			<to>11</to>&#13;
 			<read>=</read>&#13;
@@ -425,11 +426,6 @@
 			<from>0</from>&#13;
 			<to>3</to>&#13;
 			<read>*</read>&#13;
-		</transition>&#13;
-		<transition>&#13;
-			<from>29</from>&#13;
-			<to>29</to>&#13;
-			<read>UNDERLINE</read>&#13;
 		</transition>&#13;
 		<transition>&#13;
 			<from>30</from>&#13;
