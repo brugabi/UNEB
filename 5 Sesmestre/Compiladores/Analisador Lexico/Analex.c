@@ -60,9 +60,8 @@ TOKEN AnaLex (FILE *fd) {
             }
             //CHAR
             else if (c == '\''){estado = 37;} //pode ser um char, um \n ou um \0
-            //else error("Caracter invalido!");
             //STRING
-            else if (c == '"') estado = 43;
+            else if (c == '"') estado = 43; //ESTADO PARA STRING
             break;
         case 4: //COMENTARIO OU DIVISAO
             if (c == '/') {estado = 5;} // COMENTARIO
@@ -178,23 +177,42 @@ TOKEN AnaLex (FILE *fd) {
             }
             break;
         case 37: //CHAR
-            if (c >= 0 && c <=127) { //CHAR COM QUALQUER CACATER ASCII
+            if (c == '\\') { estado = 40; } //CHAR COM \n ou \0
+            else if (c >= 0 && c <=127) { //CHAR COM QUALQUER CACATER ASCII
                 estado = 38;
                 lexema[tamL++] = c;
                 lexema[tamL] = '\0'; 
             }
-            else if (c == '\n') {estado=41;}
-            else if ( c == '\0') {estado=42;}
             break;
-        case 38: if(c =='\'') {
+        case 38: 
+            if(c =='\'') { //ACABOU O CHAR COM 1 CARACTER
             estado = 39;
             t.cat = CT_C;
             t.charcon = lexema[0];
             return t;
             }
-        case 41: if (c =='\'') {estado=39; t.cat = CT_C; return t;}
+            else {estado = 0; error("ERROR: LEXEMA INVALIDO");}
             break;
-        case 42: if (c =='\'') {estado=39; t.cat = CT_C; return t;}
+        case 40:
+            if (c == 'n') { estado = 41; } //CHAR COM \n
+            else if (c == '0') { estado = 42; } //CHAR COM \0
+            else {error("ERROR: LEXEMA INVALIDO"); return t;}
+            break;
+        case 41: 
+            if (c =='\'') { //ACABOU O CHAR COM \n
+                estado=45; 
+                t.cat = CT_C;
+                t.charcon = '\n';
+                return t;
+                } 
+            else {error("ERROR: LEXEMA INVALIDO"); return t;}
+            break;
+        case 42: 
+            if (c =='\'') {
+                estado=46; 
+                t.cat = CT_C;
+                t.charcon = '\0'; 
+                return t;} //ACABOU O CHAR COM \0
             break;
         case 43: 
             if (c == '"') {
@@ -207,6 +225,7 @@ TOKEN AnaLex (FILE *fd) {
                 lexema[tamL++] = c;
                 lexema[tamL] = '\0';
             }
+            else {error("ERROR: LEXEMA INVALIDO"); return t;}
             break;
         }
     }
@@ -222,39 +241,42 @@ int main () {
 
     while (1){
         tk = AnaLex(fd);
+        printf("LINHA %d: ", contLinha);
         switch (tk.cat){
         case SN:
             switch (tk.codSN){
-                case ADICAO: printf ("<SN, ADICAO>\n"); break;
-                case SUBTRACAO: printf ("<SN, SUBTRACAO>\n"); break;
-                case MULTI: printf ("<SN, MULTIPLICACAO>\n"); break;
-                case DIV: printf("<SN, DIVISAO>\n"); break;
-                case MAIOR_IGUAL: printf("<SN, MAIOR_IGUAL>\n"); break;
-                case MAIOR: printf("<SN, MAIOR>\n"); break;
-                case MENOR_IGUAL: printf("<SN, MENOR_IGUAL>\n"); break;
-                case MENOR: printf("<SN, MENOR>\n"); break;
-                case ATRIB: printf ("<SN, ATRIBUICAO>\n "); break;
-                case IGUALDADE: printf ("<SN, IGUALDADE>\n"); break;
-                case ABRE_PAR: printf("<SN, ABRE_PARENTESES>\n"); break;
-                case FECHA_PAR: printf("<SN, FECHA_PARENTESES>\n"); break;
-                case ABRE_COL: printf("<SN, ABRE_COLCHETES>\n"); break;
-                case FECHA_COL: printf("<SN, FECHA_COLCHETES>\n"); break;
-                case OP_OR: printf("<SN, OPERADOR_OR>\n"); break;
-                case OP_AND: printf("<SN, OPERADOR_AND>\n"); break;
-                case ECOM: printf("<SN, E_COMERCIAL>\n"); break;
-                case VIRGULA: printf("<SN, VIRGULA>\n"); break;
-                case DIF: printf("<SN, DIFERENCA>\n"); break;
-                case NEGACAO: printf("<SN, NEGACAO>\n"); break;
+                case ADICAO: printf ("<SN, ADICAO>"); break;
+                case SUBTRACAO: printf ("<SN, SUBTRACAO>"); break;
+                case MULTI: printf ("<SN, MULTIPLICACAO>"); break;
+                case DIV: printf("<SN, DIVISAO>"); break;
+                case MAIOR_IGUAL: printf("<SN, MAIOR_IGUAL>"); break;
+                case MAIOR: printf("<SN, MAIOR>"); break;
+                case MENOR_IGUAL: printf("<SN, MENOR_IGUAL>"); break;
+                case MENOR: printf("<SN, MENOR>"); break;
+                case ATRIB: printf ("<SN, ATRIBUICAO>"); break;
+                case IGUALDADE: printf ("<SN, IGUALDADE>"); break;
+                case ABRE_PAR: printf("<SN, ABRE_PARENTESES>"); break;
+                case FECHA_PAR: printf("<SN, FECHA_PARENTESES>"); break;
+                case ABRE_COL: printf("<SN, ABRE_COLCHETES>"); break;
+                case FECHA_COL: printf("<SN, FECHA_COLCHETES>"); break;
+                case OP_OR: printf("<SN, OPERADOR_OR>"); break;
+                case OP_AND: printf("<SN, OPERADOR_AND>"); break;
+                case ECOM: printf("<SN, E_COMERCIAL>"); break;
+                case VIRGULA: printf("<SN, VIRGULA>"); break;
+                case DIF: printf("<SN, DIFERENCA>"); break;
+                case NEGACAO: printf("<SN, NEGACAO>"); break;
             }
             break;
-        case ID: printf("<ID, %s>\n", tk.lexema); break;
-        case PR: printf("<PR, %s>\n", tk.lexema); break;
-        case CT_I: printf("<CT_I, %d>\n", tk.valINT); break;
-        case CT_R: printf("<CT_R, %f>\n", tk.valREAL); break;
-        case CT_C: printf("<CT_C, %c>\n", tk.charcon); break;
-        case LT: printf("<LT, %s>\n", tk.lexema); break;
+        case ID: printf("<ID, %s>", tk.lexema); break;
+        case PR: printf("<PR, %s>", tk.lexema); break;
+        case CT_I: printf("<CT_I, %d>", tk.valINT); break;
+        case CT_R: printf("<CT_R, %f>", tk.valREAL); break;
+        case CT_C: printf("<CT_C, %c>", tk.charcon); break;
+        case LT: printf("<LT, %s>", tk.lexema); break;
         case FIM_ARQ: printf("<FIM DO ARQUIVO ENCONTRADO>\n"); break;
         }
+        printf("\n");
+        contLinha++;
         if (tk.cat == FIM_ARQ) break; //break do while
     }
     fclose(fd);
