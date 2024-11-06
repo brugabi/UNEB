@@ -3,13 +3,14 @@
 #include <string.h>
 #include "Analex.h"
 
-#define TAM_LEXEMA 70
-#define TAM_NUM 20
+#define TAM_LEXEMA 31
+#define TAM_NUM 30
 
 void error(char msg[]) {
     printf("%s\n", msg);
     exit(1);
 }
+
 
 TOKEN AnaLex (FILE *fd) {
     int estado = 0;
@@ -25,22 +26,23 @@ TOKEN AnaLex (FILE *fd) {
         case 0:
             if (c == ' ' || c == '\t') estado = 0;
             //SINAIS
-            else if (c == '+') { t.cat = SN; t.codSN = ADICAO; return t;}
-            else if (c == '-') { t.cat = SN; t.codSN = SUBTRACAO; return t;}
-            else if (c == '*') { t.cat = SN; t.codSN = MULTI; return t;}
+            else if (c == '+') { estado = 1; t.cat = SN; t.codSN = ADICAO; return t;}
+            else if (c == '-') { estado = 2; t.cat = SN; t.codSN = SUBTRACAO; return t;}
+            else if (c == '*') { estado = 3; t.cat = SN; t.codSN = MULTI; return t;}
             else if (c == '/') { estado = 4;} //divisao ou comentariio
             else if (c == '>') { estado = 7;} //maior ou maior igual
             else if (c == '<') { estado = 10;} //menor ou menor igual
             else if (c == '=') {estado = 13;} //atribuicao ou igualdade
-            else if (c == '(') { t.cat = SN; t.codSN = ABRE_PAR; return t;}
-            else if (c == ')') { t.cat = SN; t.codSN = FECHA_PAR; return t;}
-            else if (c == '[') { t.cat = SN; t.codSN = ABRE_COL; return t;}
-            else if (c == ']') { t.cat = SN; t.codSN = FECHA_COL; return t;}
+            else if (c == '(') { estado = 16; t.cat = SN; t.codSN = ABRE_PAR; return t;}
+            else if (c == ')') { estado = 17; t.cat = SN; t.codSN = FECHA_PAR; return t;}
+            else if (c == '[') { estado = 18; t.cat = SN; t.codSN = ABRE_COL; return t;}
+            else if (c == ']') { estado = 19; t.cat = SN; t.codSN = FECHA_COL; return t;}
             else if (c == '|') {estado = 20;} //talvez operador ou
             else if (c == '&') { estado = 22;} // operador and ou endereco
-            else if (c == ',') { t.cat = SN; t.codSN = VIRGULA; return t;}
+            else if (c == ',') { estado = 25; t.cat = SN; t.codSN = VIRGULA; return t;}
             else if (c == '!') { estado = 26;} //diferenca ou negacao
-            else if (c == EOF) { t.cat = FIM_ARQ; return t; }
+            else if (c == EOF) { t.cat = FIM_ARQ; return t; } // FIM DO ARQUIVO
+            else if (c == '\n') {estado = 0; contLinha++;} //FIM DE LINHA
             //ID
             else if (c == '_') {
                 estado = 29;
@@ -59,12 +61,13 @@ TOKEN AnaLex (FILE *fd) {
                 digitos[tamD]= '\0';
             }
             //CHAR
-            else if (c == '\''){estado = 37;} //pode ser um char, um \n ou um \0
+            else if (c == '\'')estado = 37; //pode ser um char, um \n ou um \0
             //STRING
             else if (c == '"') estado = 43; //ESTADO PARA STRING
+            else error("CARACTER INVALIDO");
             break;
         case 4: //COMENTARIO OU DIVISAO
-            if (c == '/') {estado = 5;} // COMENTARIO
+            if (c == '/') estado = 5; // COMENTARIO
             else {
                 //DIVISAO
                 estado = 6;
@@ -75,22 +78,26 @@ TOKEN AnaLex (FILE *fd) {
             }
             break;
         case 5: //COMENTARIO
-            if (c == '\n') estado = 0;
+            if (c == '\n') {
+                estado = 0;
+                ungetc(c,fd);
+            }
             break;
         case 7:
             if (c == '=') {estado = 8; t.cat = SN; t.codSN = MAIOR_IGUAL; return t;} //MAIOR IGUAL
-            else {estado = 9; t.cat = SN; t.codSN = MAIOR; return t;} //MAIOR
+            else {estado = 9; ungetc(c,fd); t.cat = SN; t.codSN = MAIOR; return t;} //MAIOR
             break;
         case 10:
             if (c == '=') {estado = 11; t.cat = SN; t.codSN = MENOR_IGUAL; return t;} //MENOR IGUAL
-            else {estado = 12; t.cat = SN; t.codSN = MENOR; return t;} //MENOR
+            else {estado = 12; ungetc(c,fd); t.cat = SN; t.codSN = MENOR; return t;} //MENOR
             break;
         case 13: //ATRIB OU IGUALDADE
             if (c == '=') {estado = 14; t.cat = SN; t.codSN = IGUALDADE; return t;} //IGUALDADE
-            else {estado = 15; t.cat = SN; t.codSN = ATRIB; return t;} //ATRIBUICAO
+            else {estado = 15; ungetc(c,fd); t.cat = SN; t.codSN = ATRIB; return t;} //ATRIBUICAO
             break;
         case 20:
             if (c == '|') {estado = 21; t.cat = SN; t.codSN = OP_OR; return t;} //OPERADOR OR
+            else error("CARACTER INVALIDO");
             break;
         case 22:
             if (c == '&') {estado = 23; t.cat = SN; t.codSN = OP_AND; return t;} //OPERADOR AND
@@ -104,7 +111,7 @@ TOKEN AnaLex (FILE *fd) {
             break;
         case 26:
             if (c == '=') {estado = 27; t.cat = SN; t.codSN = DIF; return t;} //DIFERENCA
-            else {estado = 28; t.cat = SN; t.codSN = NEGACAO; return t;} //NEGACAO
+            else {estado = 28; ungetc(c,fd); t.cat = SN; t.codSN = NEGACAO; return t;} //NEGACAO
             break;
         //CASOS DE ID
         case 29: //UNDERLINE OPCIONAL
@@ -178,7 +185,7 @@ TOKEN AnaLex (FILE *fd) {
             break;
         case 37: //CHAR
             if (c == '\\') { estado = 40; } //CHAR COM \n ou \0
-            else if (c >= 0 && c <=127) { //CHAR COM QUALQUER CACATER ASCII
+            else if (isprint(c) && c != '\'') { //CHAR COM QUALQUER CACATER ASCII MENOS O APOSTOFRO
                 estado = 38;
                 lexema[tamL++] = c;
                 lexema[tamL] = '\0'; 
@@ -191,12 +198,12 @@ TOKEN AnaLex (FILE *fd) {
             t.charcon = lexema[0];
             return t;
             }
-            else {estado = 0; error("ERROR: LEXEMA INVALIDO");}
+            else {error("ERROR: LEXEMA CHAR INVALIDO NA LINHA");}
             break;
         case 40:
-            if (c == 'n') { estado = 41; } //CHAR COM \n
-            else if (c == '0') { estado = 42; } //CHAR COM \0
-            else {error("ERROR: LEXEMA INVALIDO"); return t;}
+            if (c == 'n') estado = 41;  //CHAR COM \n
+            else if (c == '0') estado = 42; //CHAR COM \0
+            else error("ERROR: LEXEMA CHAR INVALIDO");
             break;
         case 41: 
             if (c =='\'') { //ACABOU O CHAR COM \n
@@ -205,27 +212,30 @@ TOKEN AnaLex (FILE *fd) {
                 t.charcon = '\n';
                 return t;
                 } 
-            else {error("ERROR: LEXEMA INVALIDO"); return t;}
+            else error("ERROR: LEXEMA CHAR INVALIDO");
             break;
         case 42: 
             if (c =='\'') {
-                estado=46; 
+                estado=46; //ACABOU O CHAR COM \0
                 t.cat = CT_C;
                 t.charcon = '\0'; 
-                return t;} //ACABOU O CHAR COM \0
+                return t;
+                }
+            else error("ERROR: LEXEMA CHAR INVALIDO");
             break;
-        case 43: 
+        case 43: //STRING
             if (c == '"') {
                 estado = 44;
                 t.cat = LT;
                 strcpy(t.lexema, lexema);
                 return t;
             }
-            else if(c >= 0 && c <=127) {
+            else if(isprint(c) && c != '\n') { //ACABOU A STRING
+                estado = 43;
                 lexema[tamL++] = c;
                 lexema[tamL] = '\0';
             }
-            else {error("ERROR: LEXEMA INVALIDO"); return t;}
+            else error("ERROR: LEXEMA STRING INVALIDO");
             break;
         }
     }
@@ -239,9 +249,11 @@ int main () {
     if ((fd = fopen ("expressao.dat", "r")) == NULL)
         error ("ARQUIVO DE EXPRESSAO NAO ENCONTRADO!!");
 
+    
+
     while (1){
         tk = AnaLex(fd);
-        printf("LINHA %d: ", contLinha);
+        printf("Linha %d: ", contLinha);
         switch (tk.cat){
         case SN:
             switch (tk.codSN){
@@ -275,9 +287,8 @@ int main () {
         case LT: printf("<LT, %s>", tk.lexema); break;
         case FIM_ARQ: printf("<FIM DO ARQUIVO ENCONTRADO>\n"); break;
         }
-        printf("\n");
-        contLinha++;
         if (tk.cat == FIM_ARQ) break; //break do while
+        printf("\n");
     }
     fclose(fd);
     return 0;

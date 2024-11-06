@@ -1,7 +1,7 @@
 #ifndef ANALEX
 #define ANALEX
 
-#define TAM_MAX_LEXEMA 70
+#define TAM_MAX_LEXEMA 31
 
 //CT_ I = INTEIRO CT_R = REAL LT = STRING PR = PALAVRAS RESERVADAS SN = SINAIS
 enum TOKEN_CAT {ID = 1, CT_I, CT_R, CT_C, LT, PR, SN, FIM_ARQ};
@@ -47,7 +47,13 @@ static const char* arrayPR[] = {
     "elif",
     "else",
     "endi",
-    "getout"
+    "getout",
+    "getint",
+    "getreal",
+    "getchar",
+    "putint",
+    "putreal",
+    "putchar"  
 };
 
 // Função para verificar se e PR

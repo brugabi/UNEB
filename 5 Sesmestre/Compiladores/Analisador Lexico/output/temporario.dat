@@ -19,8 +19,7 @@ teste //COMECANDO COM LETRA
 1234 //INTEGER
 3.5 //FLOAT
 'd' //CHAR
-//comentario
-'L
+
 '!' //CHAR2
 OI_QUEIROZ //ID
 "OI QUEIROZ!!" //STRING
@@ -54,5 +53,3 @@ getchar
 putint
 putreal
 putchar
-'\n'
-'\0'
