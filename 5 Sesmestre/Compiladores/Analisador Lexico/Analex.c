@@ -6,8 +6,8 @@
 #define TAM_LEXEMA 31
 #define TAM_NUM 30
 
-void error(char msg[]) {
-    printf("%s\n", msg);
+void error(char msg[], int contLinha) {
+    printf("%s%d\n", msg, contLinha);
     exit(1);
 }
 
@@ -42,7 +42,7 @@ TOKEN AnaLex (FILE *fd) {
             else if (c == ',') { estado = 25; t.cat = SN; t.codSN = VIRGULA; return t;}
             else if (c == '!') { estado = 26;} //diferenca ou negacao
             else if (c == EOF) { t.cat = FIM_ARQ; return t; } // FIM DO ARQUIVO
-            else if (c == '\n') {estado = 0; contLinha++;} //FIM DE LINHA
+            else if (c == '\n') contLinha++; //FIM DE LINHA
             //ID
             else if (c == '_') {
                 estado = 29;
@@ -64,7 +64,7 @@ TOKEN AnaLex (FILE *fd) {
             else if (c == '\'')estado = 37; //pode ser um char, um \n ou um \0
             //STRING
             else if (c == '"') estado = 43; //ESTADO PARA STRING
-            else error("CARACTER INVALIDO");
+            else error("CARACTER INVALIDO NA LINHA ", contLinha);
             break;
         case 4: //COMENTARIO OU DIVISAO
             if (c == '/') estado = 5; // COMENTARIO
@@ -97,7 +97,7 @@ TOKEN AnaLex (FILE *fd) {
             break;
         case 20:
             if (c == '|') {estado = 21; t.cat = SN; t.codSN = OP_OR; return t;} //OPERADOR OR
-            else error("CARACTER INVALIDO");
+            else error("CARACTER INVALIDO NA LINHA ", contLinha);
             break;
         case 22:
             if (c == '&') {estado = 23; t.cat = SN; t.codSN = OP_AND; return t;} //OPERADOR AND
@@ -198,12 +198,12 @@ TOKEN AnaLex (FILE *fd) {
             t.charcon = lexema[0];
             return t;
             }
-            else {error("ERROR: LEXEMA CHAR INVALIDO NA LINHA");}
+            else error("ERROR: LEXEMA CHAR INVALIDO NA LINHA NA LINHA: ", contLinha);
             break;
         case 40:
             if (c == 'n') estado = 41;  //CHAR COM \n
             else if (c == '0') estado = 42; //CHAR COM \0
-            else error("ERROR: LEXEMA CHAR INVALIDO");
+            else error("ERROR: LEXEMA CHAR INVALIDO NA LINHA NA LINHA: ", contLinha);
             break;
         case 41: 
             if (c =='\'') { //ACABOU O CHAR COM \n
@@ -212,7 +212,7 @@ TOKEN AnaLex (FILE *fd) {
                 t.charcon = '\n';
                 return t;
                 } 
-            else error("ERROR: LEXEMA CHAR INVALIDO");
+            else error("ERROR: LEXEMA CHAR INVALIDO NA LINHA NA LINHA: ", contLinha);
             break;
         case 42: 
             if (c =='\'') {
@@ -221,7 +221,7 @@ TOKEN AnaLex (FILE *fd) {
                 t.charcon = '\0'; 
                 return t;
                 }
-            else error("ERROR: LEXEMA CHAR INVALIDO");
+            else error("ERROR: LEXEMA CHAR INVALIDO NA LINHA NA LINHA:", contLinha);
             break;
         case 43: //STRING
             if (c == '"') {
@@ -235,7 +235,7 @@ TOKEN AnaLex (FILE *fd) {
                 lexema[tamL++] = c;
                 lexema[tamL] = '\0';
             }
-            else error("ERROR: LEXEMA STRING INVALIDO");
+            else error("ERROR: LEXEMA STRING INVALIDO NA LINHA NA LINHA:", contLinha);
             break;
         }
     }
@@ -247,7 +247,7 @@ int main () {
     TOKEN tk;
 
     if ((fd = fopen ("expressao.dat", "r")) == NULL)
-        error ("ARQUIVO DE EXPRESSAO NAO ENCONTRADO!!");
+        error ("ARQUIVO DE EXPRESSAO NAO ENCONTRADO!!", contLinha);
 
     
 

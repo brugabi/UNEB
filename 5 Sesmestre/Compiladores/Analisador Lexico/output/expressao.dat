@@ -20,13 +20,13 @@ teste //COMECANDO COM LETRA
 3.5 //FLOAT
 'd' //CHAR
 //comentario
-'L
+'L'
 '!' //CHAR2
 OI_QUEIROZ //ID
 "OI QUEIROZ!!" //STRING
 "OI, COMO VAI? ESTAO BEM!?" //STRING
 
-const
+const //PRS
 pr
 init
 endp
