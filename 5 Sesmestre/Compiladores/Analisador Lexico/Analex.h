@@ -86,12 +86,12 @@ typedef enum {
     PUTINT,
     PUTREAL,
     PUTCHAR,
-    FIM
+
 } PalavrasReservadas;
 
 
 // Função para verificar se e PR
-static int is_PR(const char* lexema) {
+int is_PR(const char* lexema) {
         
     for (int i = 0; i < TAM_PALAVRAS_RESERVADAS; i++) {
 
