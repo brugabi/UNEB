@@ -2,9 +2,10 @@
 #define ANALEX
 
 #define TAM_MAX_LEXEMA 31
+#define TAM_PALAVRAS_RESERVADAS 28
 
 //CT_ I = INTEIRO CT_R = REAL LT = STRING PR = PALAVRAS RESERVADAS SN = SINAIS
-enum TOKEN_CAT {ID = 1, CT_I, CT_R, CT_C, LT, PR, SN, FIM_ARQ};
+enum TOKEN_CAT {ID = 1, CT_I, CT_R, CT_C, LT, PALAVRAS_RESERVADAS, SN, FIM_ARQ};
 
 //OP_OR = OPERADOR OU "||" OP_AND = OPERADOR E "&&" 
 enum SINAIS {ADICAO = 1, SUBTRACAO, MULTI, DIV, MAIOR, MAIOR_IGUAL, MENOR, MENOR_IGUAL, ATRIB, IGUALDADE, ABRE_PAR,
@@ -18,14 +19,14 @@ typedef struct token{
         char lexema[TAM_MAX_LEXEMA];
         char charcon;
         int valINT;
-        float valREAL; //TALVEZ N PRECISE PQ REAL = INT.INT
+        float valREAL;
 
     };
     
 } TOKEN;
 
 //ARRAY DE PR
-static const char* arrayPR[] = {
+const char arrayPR[TAM_PALAVRAS_RESERVADAS][TAM_MAX_LEXEMA] = {
     "const",
     "pr",
     "init",
@@ -56,16 +57,49 @@ static const char* arrayPR[] = {
     "putchar"  
 };
 
+typedef enum {
+    CONST,
+    PR,
+    INIT,
+    ENDP,
+    CHAR,
+    INT,
+    REAL,
+    BOOL,
+    DO,
+    WHILE,
+    ENDW,
+    VAR,
+    FROM,
+    TO,
+    DT,
+    BY,
+    IF,
+    ENDV,
+    ELIF,
+    ELSE,
+    ENDI,
+    GETOUT,
+    GETINT,
+    GETREAL,
+    GETCHAR,
+    PUTINT,
+    PUTREAL,
+    PUTCHAR,
+    FIM
+} PalavrasReservadas;
+
+
 // Função para verificar se e PR
 static int is_PR(const char* lexema) {
-    int num_PR = sizeof(arrayPR) / sizeof(arrayPR[0]);
-    
-    for (int i = 0; i < num_PR; i++) {
+        
+    for (int i = 0; i < TAM_PALAVRAS_RESERVADAS; i++) {
+
         if (strcmp(lexema, arrayPR[i]) == 0) {
-            return 1; // É uma palavra reservada
+            return i; // É uma palavra reservada
         }
     }
-    return 0; // Não é uma palavra reservada
+    return -1; // Não é uma palavra reservada
 }
 
 #endif

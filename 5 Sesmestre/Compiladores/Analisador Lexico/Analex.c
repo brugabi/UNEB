@@ -134,9 +134,12 @@ TOKEN AnaLex (FILE *fd) {
             else{
                 estado = 31; //ACABOU O ID
                 ungetc(c, fd);
+                int checkPR = is_PR(lexema);
                 //VERIFICAR PALAVRA RESERVADA
-                if (is_PR(lexema) == 1) {
-                    t.cat = PR;
+                if (checkPR >= 0) {
+                    t.cat = PALAVRAS_RESERVADAS;
+                    t.codPR = checkPR;
+                    return t;
                 }
                 else {t.cat = ID;}
                 strcpy(t.lexema, lexema);
@@ -280,7 +283,38 @@ int main () {
             }
             break;
         case ID: printf("<ID, %s>", tk.lexema); break;
-        case PR: printf("<PR, %s>", tk.lexema); break;
+        case PALAVRAS_RESERVADAS: 
+            switch (tk.codPR){
+                case CONST: printf("<PR, CONST>"); break;
+                case PR: printf("<PR, PR>"); break;
+                case INIT: printf("<PR, INIT>"); break;
+                case ENDP: printf("<PR, ENDP>"); break;
+                case CHAR: printf("<PR, CHAR>"); break;
+                case INT: printf("<PR, INT>"); break;
+                case REAL: printf("<PR, REAL>"); break;
+                case BOOL: printf("<PR, BOOL>"); break;
+                case DO: printf("<PR, DO>"); break;
+                case WHILE: printf("<PR, WHILE>"); break;
+                case ENDW: printf("<PR, ENDW>"); break;
+                case VAR: printf("<PR, VAR>"); break;
+                case FROM: printf("<PR, FROM>"); break;
+                case TO: printf("<PR, TO>"); break;
+                case DT: printf("<PR, DT>"); break;
+                case BY: printf("<PR, BY>"); break;
+                case IF: printf("<PR, IF>"); break;
+                case ENDV: printf("<PR, ENDV>"); break;
+                case ELIF: printf("<PR, ELIF>"); break;
+                case ELSE: printf("<PR, ELSE>"); break;
+                case ENDI: printf("<PR, ENDI>"); break;
+                case GETOUT: printf("<PR, GETOUT>"); break;
+                case GETINT: printf("<PR, GETINT>"); break;
+                case GETREAL: printf("<PR, GETREAL>"); break;
+                case GETCHAR: printf("<PR, GETCHAR>"); break;
+                case PUTINT: printf("<PR, PUTINT>"); break;
+                case PUTREAL: printf("<PR, PUTREAL>"); break;
+                case PUTCHAR: printf("<PR, PUTCHAR>"); break;
+            }
+            break;
         case CT_I: printf("<CT_I, %d>", tk.valINT); break;
         case CT_R: printf("<CT_R, %f>", tk.valREAL); break;
         case CT_C: printf("<CT_C, %c>", tk.charcon); break;

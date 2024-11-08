@@ -26,7 +26,7 @@ OI_QUEIROZ //ID
 "OI QUEIROZ!!" //STRING
 "OI, COMO VAI? ESTAO BEM!?" //STRING
 
-const //PRS
+const // PRS
 pr
 init
 endp
