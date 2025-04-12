@@ -1,0 +1,1 @@
+Basicamente o mesmo calculo, porém, por estar mais estruturado e segregado, o da parte 5 está mais legível e menos dependente da classe PedidoService

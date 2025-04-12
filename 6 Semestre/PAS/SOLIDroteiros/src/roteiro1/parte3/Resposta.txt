@@ -1,0 +1,1 @@
+Poderia possivelmente criar uma classe chamada "Carrinho" para lidar com a lista de produtos.
