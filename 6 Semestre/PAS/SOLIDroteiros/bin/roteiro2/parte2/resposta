@@ -1,0 +1,2 @@
+Sim, principalmente evidenciado na classe DescontoLivre que está implementada a interface na qual é possivel criar novas regras de negócio sem necessitr atlerar o codigo do PedidoService.
+Entretanto, o metodo processarPedido aceita um parametro mas nao o utiliza para o codigo. A logica de desconto está tota na interface do objeto DescontoLivre.

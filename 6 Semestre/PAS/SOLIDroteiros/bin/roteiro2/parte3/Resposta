@@ -1,0 +1,1 @@
+Criar uma nova classe chamada DescontoPersonalizado que implemente a interface RegraDesconto. Essa classe permitirá que o vendedor informe manualmente o percentual de desconto no momento da venda, acima de 10% porém abaixo de 20%, para nao atignir o patamar do descontoVIP.
