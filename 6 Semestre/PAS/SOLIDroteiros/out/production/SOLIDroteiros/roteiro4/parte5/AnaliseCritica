@@ -1,0 +1,6 @@
+1. Sim, permitiu nao aumentar muito a complexidade do codigo necessitando um monte de interface para lidar com o reembolso e os pagamentos. Além de permitir tratar os casos especificos de geracao de fatura e validacao de saldo sem a necessidade de jogar exceçoes.
+2. Nao completamente.
+2.1 Os metodos tem responsabilidade unica agora, sem o codigo morto.
+2.2 Permite a extensao do codigo para futuros meotods de pagamento sem a necessidade de alterar o codigo ja escrito.
+2.3 o metodo validarSaldo lanca uma excecao por padrao.
+2.4 Há uma certa segregaçao de interface utilizando tanto a classe abstrata quanto o
