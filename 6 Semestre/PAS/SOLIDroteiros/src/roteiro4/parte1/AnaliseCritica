@@ -1,0 +1,2 @@
+1. Sim, fazendo interfaces separadas.
+2. Sim, o principio apresentado no roteiro anterior de Liskov. Gerar fatura é herdado por cripto mas nao faz sentido para ela e validar saldo e herdado por boleto que também nao faz sentido para ele.

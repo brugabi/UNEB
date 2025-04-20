@@ -1,0 +1,5 @@
+1. Sim
+2. A 2, que implementa a interface de veiculo Motorizado. Pois permite uma escalabilidade mais flexivel para o codigo. Caso exita outro tipo de veiculo nao motorizado é mais simples adicionar sem quebrar os principios do SOLID.
+3. Para verificar se é um veiculo motorizado ou nao. Porém, a verificacao ficou um pouco simples pois visa se é um Onibus ou nao. Se existisse outra classe de veiculo motorizado teria que adicionar mais condicoes na condicional.
+4. Sim.
+5. Sim, o principio de aberto e fechado e de responsabilidade unica.

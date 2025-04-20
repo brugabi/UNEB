@@ -1,0 +1,6 @@
+1. Sim, permitiu nao aumentar muito a complexidade do codigo necessitando um monte de interface para lidar com o reembolso e os pagamentos. Além de permitir tratar os casos especificos de geracao de fatura e validacao de saldo sem a necessidade de jogar exceçoes.
+2. Nao completamente, o principio de Liskov ta sendo ferido. Alem disso, ISP nao foi totalmente comprido.
+2.1 Foi sulucionado o problema do codigo morto que feria esse principio de OCP.
+2.2 Permite a extensao do codigo para futuros meotods de pagamento sem a necessidade de alterar o codigo ja escrito.
+2.3 O metodo validarSaldo lanca uma excecao por padrao. Se um pagameto que nao possibilida validar o saldo como boleto tentar usar esse metodo, ira lancar uma excecao.
+2.4 Para atender as condicoes apresentadas foi necessario criar uma classe abstrata e "acoplar" novamente as interfaces segregadas. Portanto, a parte 3 respeita mais esse principio que essa parte.
