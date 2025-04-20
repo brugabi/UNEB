@@ -1,0 +1,1 @@
+O metodo calcularTarifa pode começar a depender de outras varíaveis como quantidade de passageiros, kg do veiculo, etc. Assim, poderá exigir parametros diferentes em cada subclasse. Seria talvez o ideal criar uma classe para o calculo de tarifa para atender uma escalabilidade maior.
