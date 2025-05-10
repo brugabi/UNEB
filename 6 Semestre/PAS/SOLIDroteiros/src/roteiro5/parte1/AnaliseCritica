@@ -1,0 +1,2 @@
+O código viola o OCP porque precisa ser modificado para adicionar novos tipos de notificação.
+O ideal seria usar interfaces para permitir extensão sem alterar a classe.
