@@ -1,0 +1,8 @@
+Na parte 1 Os códigos não seguem o SOLID, pois dependem diretamente de MysqlConnection.
+Deveriam usar uma interface para garantir menor acoplamento e maior flexibilidade, conforme o princípio da inversão de dependência (DIP).
+
+Na parte 2 basicamente é o mesmo problema, porém relacionado ao OrracleConection.
+
+Já na parte 3, o problema foi resolvido, pois a interface foi usada para garantir maior flexibilidade, conforme o princípio da substituição de liskov (LSP).
+Caso queira implementar outro tipo de conexão, basta implementar a interface e usar ela em vez da classe concreta.
+Como demonstrado ao implementar o SqlServer sugerido.
