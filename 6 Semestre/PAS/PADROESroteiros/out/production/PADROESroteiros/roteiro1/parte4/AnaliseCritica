@@ -1,0 +1,4 @@
+1. Context = Player, Strtegy = RunBehaviour, ConcreateStrategy1 = RunFast, ConcreateStrategy2 = RunNoWay.
+2. Adicionar um método "setter" na classe Player que permita a troca do objeto de estratégia (RunBehavior) após a criação do jogador.
+3. Sim, o Princípio da Substituição de Liskov é preservado.
+4. Sim.
