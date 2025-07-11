@@ -1,0 +1,26 @@
+3.  FALTA DIAGRAMA
+
+4. A coesão mede o grau de relacionamento e foco das responsabilidades dentro de um mesmo módulo.
+O acoplamento mede o grau de interdependência entre diferentes módulos.
+
+A relação entre eles é inversamente proporcional e o objetivo de um bom design de software é sempre o mesmo:
+
+    Buscar ALTA COESÃO e BAIXO ACOPLAMENTO.
+
+ 5. A Lei de Demeter é um princípio de encapsulamento que pode ser resumido em uma frase simples:
+       "Fale apenas com seus amigos imediatos. Não fale com estranhos."
+
+       Isso significa que um método de um objeto só deve invocar métodos que pertençam:
+
+           Ao próprio objeto (this).
+
+           A objetos passados como parâmetro para o método.
+
+           A objetos que o próprio método cria ou instancia.
+
+           A objetos que são seus componentes diretos (atributos do objeto).
+
+       Qualquer outro objeto é considerado um "estranho", e interagir diretamente com ele é uma violação da lei.
+
+6. O projeto focou em reduzir o acoplamento e melhorar a coesao, o que também parcialmente implica em aplicar a lei de Demeter.
+
