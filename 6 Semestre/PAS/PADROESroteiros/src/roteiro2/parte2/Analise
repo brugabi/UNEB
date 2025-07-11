@@ -1,0 +1,10 @@
+3. Calcular Desconto é abstrato porque não há uma forma padrão de calcular um desconto que se aplique a todos os tipos de pagamento.
+Já o Calcular Taxa assume que a maioria das formas de pagamento pode não ter uma taxa adicional. Portanto, retornar 0 é um comportamento padrão seguro.
+
+6.
+6.1 Sim, esta modelagem permite que usemos todas as instâncias de pagamento como se fossem de um único tipo: Pagamento. Isso é possível graças ao polimorfismo.
+6.2 Essa análise é fundamental porque revela os benefícios de um bom design de software, que impactam diretamente a flexibilidade, a manutenção e a expansão do sistema.
+
+8.
+8.1.  Sim.
+8.2. A hierarquia da classe Pagamento está fazendo o papel análogo ao da Strategy. O papel de "Client" ou "Context" do Strategy não está explícito no código fornecido, mas seria a classe que instancia e utiliza um dos objetos Pagamento.
