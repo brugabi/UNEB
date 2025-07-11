@@ -1,0 +1,3 @@
+4. Nao. Pois nao garantiu apenas uma instancia.
+7. n1 e n2 falham em implementar singleton enquanto n3 e n4 tem sucesso.
+10. Eager. Como ControladorAereo cria a instância imediatamente na declaração do atributo estático, ela é classificada como Eager.

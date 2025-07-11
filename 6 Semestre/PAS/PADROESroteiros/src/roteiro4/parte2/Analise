@@ -1,0 +1,7 @@
+A classe que representa o Adapter é a ShotGunAdapter.
+
+A classe que representa o Adaptee é a ShotGun.
+
+A interface que representa o Target é a Arma.
+
+A classe que representa o Client é a Atirador.
