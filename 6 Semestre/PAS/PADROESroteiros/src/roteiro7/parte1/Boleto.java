@@ -1,6 +1,6 @@
 package roteiro7.parte1;
 
-public class Boleto {
+public abstract class Boleto {
 
     protected double valor;
     protected double juros;
