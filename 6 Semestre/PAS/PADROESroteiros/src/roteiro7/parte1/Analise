@@ -1,0 +1,7 @@
+5. GERAR DIAGRAMA
+6. Sim, é perfeitamente possível identificar um forte acoplamento entre a classe BancoCaixa e as implementações concretas dos boletos (BoletoCaixa10Dias, BoletoCaixa30Dias, etc.).
+Se fosse necessário adicionar o Banco do Brasil, que também oferece boletos de 10, 30 e 60 dias, teríamos os seguintes problemas:
+Criação de Novas Classes
+Duplicação de Lógica
+Manutenção Complexa
+
