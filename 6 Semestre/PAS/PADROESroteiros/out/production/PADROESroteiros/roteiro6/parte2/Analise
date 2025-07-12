@@ -1,0 +1,5 @@
+6. A abordagem com Facade é superior em termos de design de software, manutenibilidade e escalabilidade. Ela promove um baixo acoplamento e simplifica o uso de subsistemas complexos. A abordagem sem Facade cria um código frágil e difícil de manter, que não resiste bem a mudanças nos requisitos do sistema.
+
+
+
+FALTA DIAGRAMA

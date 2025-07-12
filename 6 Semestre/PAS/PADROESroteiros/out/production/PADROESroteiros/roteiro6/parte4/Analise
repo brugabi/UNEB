@@ -1,0 +1,3 @@
+4. A combinação do Facade com Singleton é poderosa para garantir um único ponto de controle e estado para um subsistema, o que é excelente para gerenciar recursos como uma conexão de banco de dados. No entanto, ela introduz os problemas clássicos do Singleton: riscos de concorrência devido ao estado global e dificuldades de teste.
+
+5. FALTA O DIAGRAMA

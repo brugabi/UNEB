@@ -1,0 +1,6 @@
+5. É necessário modificar o código fonte de todas as três classes controladoras. Em cada uma delas, teremos que adicionar um novo else if nos métodos criar...Adapter. Isso viola diretamente o Princípio Aberto/Fechado.
+7. Sim, a essa altura já é possível visualizar claramente as desvantagens deste design:
+   Violação do Princípio Aberto/Fechado
+   Duplicação de Lógica de Criação
+   Violação do Princípio da Responsabilidade Única
+

@@ -1,0 +1,2 @@
+Enquanto na 1 parte a classe Usuario interage diretamente com a classe PessoaFisicaReceitaFederal. Na 2  o Usuario interage com um objeto Proxy, que por sua vez controla o acesso ao objeto real.
+Embora na 2 tenha uma complexidade estrutural um pouco maior, os ganhos em performance percebida pelo usuário e eficiência no uso de recursos são imensos.

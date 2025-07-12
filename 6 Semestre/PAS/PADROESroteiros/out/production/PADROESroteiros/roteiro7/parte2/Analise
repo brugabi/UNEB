@@ -1,0 +1,3 @@
+5. A refatoração, embora pareça um simples "mover de código", na verdade aplicou o Princípio da Responsabilidade Única e reduziu o acoplamento, resolvendo problemas fundamentais de design. Ela preparou o terreno para que o sistema possa crescer (com novos bancos e boletos) de forma muito mais organizada e sustentável, o que não seria possível com o design anterior.
+
+6. FAZER DIAGRAMA

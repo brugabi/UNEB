@@ -1,0 +1,3 @@
+7. DIAGRAMA
+
+8. Graças ao padrão Factory Method, o processo para adicionar um novo banco é um processo de adição de código novo, sem a necessidade de modificar o código existente
