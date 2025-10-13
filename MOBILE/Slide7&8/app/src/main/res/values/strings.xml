@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">TestApp</string>
+    <string name="localizacao_txt">Localizacao</string>
+    <string name="gnss_txt">Gnss</string>
+</resources>
