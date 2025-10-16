@@ -14,6 +14,8 @@ import android.location.GnssStatus;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
@@ -68,13 +70,13 @@ public class GnssSkyView extends View {
         setOnClickListener(v -> showSettingsDialog());
     }
 
-    public void setGnssStatus(GnssStatus status) {
+    public void setGnssStatus(@NonNull GnssStatus status) {
         this.gnssStatus = status;
         invalidate();
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         float centerX = getWidth() / 2f;
         float centerY = getHeight() / 2f;
@@ -125,7 +127,7 @@ public class GnssSkyView extends View {
         canvas.drawText("In Fix: " + usedInFixCount, 10, getHeight() - 10, paint);
     }
 
-    private void drawSatellite(Canvas canvas, float x, float y, int constellation, boolean used, int svid) {
+    private void drawSatellite(@NonNull Canvas canvas, float x, float y, int constellation, boolean used, int svid) {
         paint.setStyle(used ? Paint.Style.FILL : Paint.Style.STROKE);
         paint.setStrokeWidth(3);
 
