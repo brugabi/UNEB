@@ -120,11 +120,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-        Log.d(TAG, "onStatusChanged: provider=" + provider + " status=" + status);
-    }
-
-    @Override
     public void onProviderEnabled(@NonNull String provider) {
         Log.d(TAG, "onProviderEnabled: " + provider);
     }

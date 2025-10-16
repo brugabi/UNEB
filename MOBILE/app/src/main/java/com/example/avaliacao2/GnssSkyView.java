@@ -40,11 +40,21 @@ public class GnssSkyView extends View {
         init(attrs);
     }
 
-    private void init(AttributeSet attrs) {
+    private void init(@Nullable AttributeSet attrs) {
         sharedPreferences = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         loadSettings();
-        skyColor = Color.parseColor("#191970");
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        if (attrs != null) {
+            TypedArray a = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.GnssSkyView, 0, 0);
+            try {
+                skyColor = a.getColor(R.styleable.GnssSkyView_skyColor, Color.parseColor("#191970"));
+            } finally {
+                a.recycle();
+            }
+        } else {
+            skyColor = Color.parseColor("#191970");
+        }
 
         try {
             flagUsa = BitmapFactory.decodeResource(getResources(), R.drawable.flag_usa);
@@ -169,22 +179,17 @@ public class GnssSkyView extends View {
     }
 
     private boolean shouldDrawSatellite(int constellation, boolean usedInFix) {
-        boolean constellationEnabled;
-        switch (constellation) {
-            case GnssStatus.CONSTELLATION_GPS: constellationEnabled = showGps; break;
-            case GnssStatus.CONSTELLATION_GLONASS: constellationEnabled = showGlonass; break;
-            case GnssStatus.CONSTELLATION_GALILEO: constellationEnabled = showGalileo; break;
-            case GnssStatus.CONSTELLATION_BEIDOU: constellationEnabled = showBeidou; break;
-            default: return false;
-        }
-
-        if (!constellationEnabled) {
-            return false;
-        }
-
         if (usedInFix) {
-            return true;
+            // For satellites in fix, only show if their constellation is enabled
+            switch (constellation) {
+                case GnssStatus.CONSTELLATION_GPS: return showGps;
+                case GnssStatus.CONSTELLATION_GLONASS: return showGlonass;
+                case GnssStatus.CONSTELLATION_GALILEO: return showGalileo;
+                case GnssStatus.CONSTELLATION_BEIDOU: return showBeidou;
+                default: return false;
+            }
         } else {
+            // For satellites NOT in fix, only depend on the global toggle
             return showNotInFix;
         }
     }
