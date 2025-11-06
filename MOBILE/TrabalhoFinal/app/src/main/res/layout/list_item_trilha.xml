@@ -1,0 +1,30 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/tv_nome_trilha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nome da Trilha"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_data_trilha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Data: 2024-01-01" />
+
+    <TextView
+        android:id="@+id/tv_distancia_trilha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Distância: 5.2 km" />
+
+</LinearLayout>

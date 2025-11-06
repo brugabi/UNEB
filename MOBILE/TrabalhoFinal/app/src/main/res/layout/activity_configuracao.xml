@@ -1,0 +1,85 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/et_nome_usuario"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nome do usuário" />
+
+    <EditText
+        android:id="@+id/et_peso"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Peso (kg)"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/et_altura"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Altura (m)"
+        android:inputType="numberDecimal" />
+
+    <Spinner
+        android:id="@+id/spinner_sexo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/et_data_nascimento"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Data de nascimento (dd/mm/aaaa)"
+        android:inputType="date" />
+
+    <RadioGroup
+        android:id="@+id/rg_tipo_mapa"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rb_vetorial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vetorial" />
+
+        <RadioButton
+            android:id="@+id/rb_satelite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Satélite" />
+    </RadioGroup>
+
+    <RadioGroup
+        android:id="@+id/rg_forma_navegacao"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rb_north_up"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="North Up" />
+
+        <RadioButton
+            android:id="@+id/rb_course_up"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Course Up" />
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/btn_salvar_configuracoes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Salvar" />
+
+</LinearLayout>

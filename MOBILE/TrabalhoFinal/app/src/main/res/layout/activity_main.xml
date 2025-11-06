@@ -1,0 +1,35 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/btn_configuracao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Configuração" />
+
+    <Button
+        android:id="@+id/btn_registrar_trilha"
+        android.layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Registrar Trilha" />
+
+    <Button
+        android:id="@+id/btn_consultar_trilhas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Consultar Trilhas" />
+
+    <Button
+        android:id="@+id/btn_creditos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Créditos" />
+
+</LinearLayout>

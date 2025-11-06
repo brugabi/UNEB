@@ -1,0 +1,9 @@
+
+<resources>
+    <string name="app_name">Trabalho Final</string>
+    <string-array name="sexo_array">
+        <item>Masculino</item>
+        <item>Feminino</item>
+        <item>Outro</item>
+    </string-array>
+</resources>
