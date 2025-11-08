@@ -49,7 +49,8 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation("com.google.android.gms:play-services-maps:18.2.0")
-    implementation("com.google.android.gms:play-services-location:21.2.0") // Adicionada esta linha
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.code.gson:gson:2.9.0") // Adicionada esta linha
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

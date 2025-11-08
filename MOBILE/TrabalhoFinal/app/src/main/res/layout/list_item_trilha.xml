@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="?android:attr/selectableItemBackground">
+    android:background="@drawable/list_item_selector">
 
     <TextView
         android:id="@+id/tv_nome_trilha"

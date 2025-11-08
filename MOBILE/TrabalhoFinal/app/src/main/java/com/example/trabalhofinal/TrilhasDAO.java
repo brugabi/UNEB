@@ -1,10 +1,11 @@
-
 package com.example.trabalhofinal;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,8 +43,6 @@ public class TrilhasDAO {
     public int atualizarTrilha(Trilha trilha) {
         ContentValues values = new ContentValues();
         values.put(TrilhasDBHelper.COLUMN_NOME, trilha.getNome());
-        // ... (adicione outros campos que podem ser atualizados)
-
         return db.update(TrilhasDBHelper.TABLE_TRILHAS, values, TrilhasDBHelper.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(trilha.getId())});
     }
@@ -51,6 +50,26 @@ public class TrilhasDAO {
     public void apagarTrilha(long trilhaId) {
         db.delete(TrilhasDBHelper.TABLE_TRILHAS, TrilhasDBHelper.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(trilhaId)});
+    }
+
+    public void apagarTrilhas(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        String idsString = TextUtils.join(",", ids);
+        db.delete(TrilhasDBHelper.TABLE_TRILHAS,
+                TrilhasDBHelper.COLUMN_ID + " IN (" + idsString + ")",
+                null);
+    }
+
+    public void apagarTodasAsTrilhas() {
+        db.delete(TrilhasDBHelper.TABLE_TRILHAS, null, null);
+    }
+
+    public void apagarTrilhasPorIntervalo(String dataInicio, String dataFim) {
+        db.delete(TrilhasDBHelper.TABLE_TRILHAS,
+                TrilhasDBHelper.COLUMN_DATA_HORA_INICIO + " BETWEEN ? AND ?",
+                new String[]{dataInicio, dataFim});
     }
 
     public List<Trilha> getAllTrilhas() {
@@ -73,11 +92,12 @@ public class TrilhasDAO {
                 new String[]{String.valueOf(id)}, null, null, null);
 
         if (cursor != null) {
-            cursor.moveToFirst();
-            if (cursor.isFirst()) {
-                Trilha trilha = cursorToTrilha(cursor);
+            try {
+                if (cursor.moveToFirst()) {
+                    return cursorToTrilha(cursor);
+                }
+            } finally {
                 cursor.close();
-                return trilha;
             }
         }
         return null;

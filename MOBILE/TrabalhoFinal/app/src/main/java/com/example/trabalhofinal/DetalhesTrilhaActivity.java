@@ -1,8 +1,10 @@
-
 package com.example.trabalhofinal;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,6 +15,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +27,8 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
 
     private MapView mapView;
     private GoogleMap googleMap;
-
     private TextView tvNome, tvDataInicio, tvDataFim, tvDistancia, tvVelMedia, tvVelMaxima, tvCalorias;
+    private Button btnCompartilhar;
 
     private TrilhasDAO trilhasDAO;
     private Trilha trilha;
@@ -50,6 +53,7 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
         tvVelMedia = findViewById(R.id.tv_detalhes_velocidade_media);
         tvVelMaxima = findViewById(R.id.tv_detalhes_velocidade_maxima);
         tvCalorias = findViewById(R.id.tv_detalhes_gasto_calorico);
+        btnCompartilhar = findViewById(R.id.btn_compartilhar);
 
         // --- Carregar dados da trilha ---
         trilhasDAO = new TrilhasDAO(this);
@@ -63,16 +67,19 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
             return;
         }
 
-        // --- Preencher Views ---
         popularViews();
 
         // --- Inicialização do Mapa ---
         mapView = findViewById(R.id.mapView_detalhes);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
+
+        // --- Listener do Botão Compartilhar ---
+        btnCompartilhar.setOnClickListener(v -> mostrarDialogoCompartilhar());
     }
 
     private void popularViews() {
+        setTitle(trilha.getNome()); // Adiciona o nome da trilha na ActionBar
         tvNome.setText("Nome: " + trilha.getNome());
         tvDataInicio.setText("Início: " + trilha.getDataHoraInicio());
         tvDataFim.setText("Fim: " + trilha.getDataHoraFim());
@@ -85,8 +92,6 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
-        googleMap.getUiSettings().setAllGesturesEnabled(true);
-
         desenharPercurso();
     }
 
@@ -98,71 +103,141 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
         List<LatLng> percursoPoints = parsePercursoString(trilha.getPercurso());
 
         if (percursoPoints.size() > 1) {
-            PolylineOptions polylineOptions = new PolylineOptions()
-                    .addAll(percursoPoints)
-                    .color(0xFF0000FF) // Azul
-                    .width(10);
+            PolylineOptions polylineOptions = new PolylineOptions().addAll(percursoPoints).color(0xFF0000FF).width(10);
             googleMap.addPolyline(polylineOptions);
 
-            // Centralizar a câmera para mostrar todo o percurso
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             for (LatLng latLng : percursoPoints) {
                 builder.include(latLng);
             }
             LatLngBounds bounds = builder.build();
-            int padding = 100; // Espaçamento em pixels
+            int padding = 100;
             googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
         } else if (percursoPoints.size() == 1) {
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(percursoPoints.get(0), 15));
         }
     }
 
+    // --- Lógica de Compartilhamento ---
+
+    private void mostrarDialogoCompartilhar() {
+        final String[] formatos = {"GPX", "KML", "JSON", "CSV"};
+        new AlertDialog.Builder(this)
+                .setTitle("Escolha o formato de compartilhamento")
+                .setItems(formatos, (dialog, which) -> {
+                    String formatoEscolhido = formatos[which];
+                    String dadosParaCompartilhar = gerarDados(formatoEscolhido);
+                    compartilharTexto(dadosParaCompartilhar, formatoEscolhido);
+                })
+                .show();
+    }
+
+    private String gerarDados(String formato) {
+        List<LatLng> percurso = parsePercursoString(trilha.getPercurso());
+        switch (formato) {
+            case "GPX":
+                return gerarGPX(percurso);
+            case "KML":
+                return gerarKML(percurso);
+            case "JSON":
+                return gerarJSON();
+            case "CSV":
+                return gerarCSV(percurso);
+            default:
+                return "";
+        }
+    }
+
+    private void compartilharTexto(String texto, String formato) {
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, texto);
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Dados da Trilha: " + trilha.getNome());
+        sendIntent.setType("text/plain");
+
+        Intent shareIntent = Intent.createChooser(sendIntent, "Compartilhar Trilha via");
+        startActivity(shareIntent);
+    }
+
+    private String gerarGPX(List<LatLng> percurso) {
+        StringBuilder gpx = new StringBuilder();
+        gpx.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        gpx.append("<gpx version=\"1.1\" creator=\"TrilhasApp\">\n");
+        gpx.append("  <trk>\n");
+        gpx.append("    <name>").append(trilha.getNome()).append("</name>\n");
+        gpx.append("    <trkseg>\n");
+        for (LatLng ponto : percurso) {
+            gpx.append("      <trkpt lat=\"").append(ponto.latitude).append("\" lon=\"").append(ponto.longitude).append("\"></trkpt>\n");
+        }
+        gpx.append("    </trkseg>\n");
+        gpx.append("  </trk>\n");
+        gpx.append("</gpx>\n");
+        return gpx.toString();
+    }
+
+    private String gerarKML(List<LatLng> percurso) {
+        StringBuilder kml = new StringBuilder();
+        kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        kml.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
+        kml.append("  <Document>\n");
+        kml.append("    <name>").append(trilha.getNome()).append("</name>\n");
+        kml.append("    <Placemark>\n");
+        kml.append("      <name>Percurso</name>\n");
+        kml.append("      <LineString>\n");
+        kml.append("        <coordinates>\n");
+        for (LatLng ponto : percurso) {
+            kml.append("          ").append(ponto.longitude).append(",").append(ponto.latitude).append(",0\n");
+        }
+        kml.append("        </coordinates>\n");
+        kml.append("      </LineString>\n");
+        kml.append("    </Placemark>\n");
+        kml.append("  </Document>\n");
+        kml.append("</kml>\n");
+        return kml.toString();
+    }
+
+    private String gerarJSON() {
+        Gson gson = new Gson();
+        return gson.toJson(trilha);
+    }
+
+    private String gerarCSV(List<LatLng> percurso) {
+        StringBuilder csv = new StringBuilder();
+        csv.append("latitude,longitude\n");
+        for (LatLng ponto : percurso) {
+            csv.append(ponto.latitude).append(",").append(ponto.longitude).append("\n");
+        }
+        return csv.toString();
+    }
+
     private List<LatLng> parsePercursoString(String percursoStr) {
         List<LatLng> latLngs = new ArrayList<>();
+        if (percursoStr == null || percursoStr.isEmpty()) return latLngs;
         Pattern pattern = Pattern.compile("\\(([-+]?[0-9]*\\.[0-9]+),([-+]?[0-9]*\\.[0-9]+)\\)");
         Matcher matcher = pattern.matcher(percursoStr);
         while (matcher.find()) {
-            double lat = Double.parseDouble(matcher.group(1));
-            double lng = Double.parseDouble(matcher.group(2));
-            latLngs.add(new LatLng(lat, lng));
+            try {
+                double lat = Double.parseDouble(matcher.group(1));
+                double lng = Double.parseDouble(matcher.group(2));
+                latLngs.add(new LatLng(lat, lng));
+            } catch (Exception e) {
+                // Ignora pontos malformados
+            }
         }
         return latLngs;
     }
 
     // --- Ciclo de Vida do MapView ---
     @Override
-    protected void onResume() {
-        super.onResume();
-        mapView.onResume();
-    }
-
+    protected void onResume() { super.onResume(); mapView.onResume(); }
     @Override
-    protected void onStart() {
-        super.onStart();
-        mapView.onStart();
-    }
-
+    protected void onStart() { super.onStart(); mapView.onStart(); }
     @Override
-    protected void onStop() {
-        super.onStop();
-        mapView.onStop();
-    }
-
+    protected void onStop() { super.onStop(); mapView.onStop(); }
     @Override
-    protected void onPause() {
-        super.onPause();
-        mapView.onPause();
-    }
-
+    protected void onPause() { super.onPause(); mapView.onPause(); }
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mapView.onDestroy();
-    }
-
+    protected void onDestroy() { super.onDestroy(); mapView.onDestroy(); }
     @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        mapView.onLowMemory();
-    }
+    public void onLowMemory() { super.onLowMemory(); mapView.onLowMemory(); }
 }
