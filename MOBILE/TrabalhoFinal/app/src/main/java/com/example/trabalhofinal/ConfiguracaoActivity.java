@@ -1,14 +1,14 @@
-
 package com.example.trabalhofinal;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -36,7 +36,6 @@ public class ConfiguracaoActivity extends Activity {
         rgFormaNavegacao = findViewById(R.id.rg_forma_navegacao);
         btnSalvar = findViewById(R.id.btn_salvar_configuracoes);
 
-        // Populando o spinner de sexo
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.sexo_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -44,19 +43,22 @@ public class ConfiguracaoActivity extends Activity {
 
         carregarConfiguracoes();
 
-        btnSalvar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                salvarConfiguracoes();
-            }
-        });
+        etDataNascimento.addTextChangedListener(getDateMaskListener());
+
+        btnSalvar.setOnClickListener(v -> salvarConfiguracoes());
     }
 
     private void carregarConfiguracoes() {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         etNomeUsuario.setText(settings.getString("nomeUsuario", ""));
-        etPeso.setText(String.valueOf(settings.getFloat("peso", 0)));
-        etAltura.setText(String.valueOf(settings.getFloat("altura", 0)));
+        float peso = settings.getFloat("peso", 0f);
+        if (peso > 0) {
+            etPeso.setText(String.valueOf(peso));
+        }
+        float altura = settings.getFloat("altura", 0f);
+        if (altura > 0) {
+            etAltura.setText(String.valueOf(altura));
+        }
         etDataNascimento.setText(settings.getString("dataNascimento", ""));
         spinnerSexo.setSelection(settings.getInt("sexo", 0));
         rgTipoMapa.check(settings.getInt("tipoMapa", R.id.rb_vetorial));
@@ -68,8 +70,16 @@ public class ConfiguracaoActivity extends Activity {
         SharedPreferences.Editor editor = settings.edit();
 
         editor.putString("nomeUsuario", etNomeUsuario.getText().toString());
-        editor.putFloat("peso", Float.parseFloat(etPeso.getText().toString()));
-        editor.putFloat("altura", Float.parseFloat(etAltura.getText().toString()));
+        try {
+            editor.putFloat("peso", Float.parseFloat(etPeso.getText().toString()));
+        } catch (NumberFormatException e) {
+            editor.putFloat("peso", 0f); // Salva 0 se o campo estiver inválido ou vazio
+        }
+        try {
+            editor.putFloat("altura", Float.parseFloat(etAltura.getText().toString()));
+        } catch (NumberFormatException e) {
+            editor.putFloat("altura", 0f); // Salva 0 se o campo estiver inválido ou vazio
+        }
         editor.putString("dataNascimento", etDataNascimento.getText().toString());
         editor.putInt("sexo", spinnerSexo.getSelectedItemPosition());
         editor.putInt("tipoMapa", rgTipoMapa.getCheckedRadioButtonId());
@@ -78,5 +88,47 @@ public class ConfiguracaoActivity extends Activity {
         editor.apply();
 
         Toast.makeText(this, "Configurações salvas com sucesso!", Toast.LENGTH_SHORT).show();
+    }
+
+    private TextWatcher getDateMaskListener() {
+        return new TextWatcher() {
+            private boolean isUpdating;
+            private String old = "";
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String str = s.toString().replaceAll("[^\\d]", "");
+                String formatted = "";
+                if (isUpdating) {
+                    old = str;
+                    isUpdating = false;
+                    return;
+                }
+
+                int i = 0;
+                for (char m : "##/##/####".toCharArray()) {
+                    if (m != '#' && str.length() > old.length()) {
+                        formatted += m;
+                        continue;
+                    }
+                    try {
+                        formatted += str.charAt(i);
+                        i++;
+                    } catch (Exception e) {
+                        break;
+                    }
+                }
+
+                isUpdating = true;
+                etDataNascimento.setText(formatted);
+                etDataNascimento.setSelection(formatted.length());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
     }
 }
