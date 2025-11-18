@@ -10,7 +10,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.InputType;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.EditText;
@@ -61,7 +60,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     private String dataHoraInicio;
 
     private TrilhasDAO trilhasDAO;
-    private int navigationMode; // Para guardar a preferência de navegação
+    private int navigationMode;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
@@ -94,7 +93,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
-        aplicarConfiguracoesDoMapa(); // APLICA AS CONFIGURAÇÕES AQUI
+        aplicarConfiguracoesDoMapa();
         enableMyLocation();
     }
 
@@ -105,7 +104,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         int mapTypeId = settings.getInt("tipoMapa", R.id.rb_vetorial);
         navigationMode = settings.getInt("formaNavegacao", R.id.rb_north_up);
 
-        // Define o tipo de mapa (Satélite ou Vetorial)
         if (mapTypeId == R.id.rb_satelite) {
             googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         } else {
@@ -194,7 +192,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         percurso.add(latLng);
         polyline.setPoints(percurso);
 
-        // APLICA O MODO DE NAVEGAÇÃO AQUI
         if (navigationMode == R.id.rb_course_up && location.hasBearing()) {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
@@ -203,11 +200,11 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                     .tilt(45.0f)
                     .build();
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-        } else { // Modo North Up
+        } else {
             googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
         }
 
-        float velocidadeAtual = location.getSpeed() * 3.6f; // m/s para km/h
+        float velocidadeAtual = location.getSpeed() * 3.6f;
         tvVelocidade.setText(String.format(Locale.getDefault(), "Velocidade: %.1f km/h", velocidadeAtual));
         if (velocidadeAtual > velocidadeMaxima) velocidadeMaxima = velocidadeAtual;
 
@@ -215,10 +212,8 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         ultimaLocalizacao = location;
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", distanciaTotal / 1000));
 
-        // TODO: Usar dados reais do usuário (SharedPreferences) para um cálculo preciso
         float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
-        long tempoDecorridoHoras = (SystemClock.elapsedRealtime() - chronometer.getBase()) / 3600000;
-        float calorias = (distanciaTotal / 1000) * peso * 1.036f; // Fórmula simples com MET
+        float calorias = (distanciaTotal / 1000) * peso * 1.036f;
         tvCalorias.setText(String.format(Locale.getDefault(), "Calorias: %.1f kcal", calorias));
     }
 
@@ -237,10 +232,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
             }
             salvarTrilha(nomeTrilha);
         });
-        builder.setNegativeButton("Descartar", (dialog, which) -> {
-            Toast.makeText(this, "Trilha descartada", Toast.LENGTH_SHORT).show();
-            dialog.cancel();
-        });
+        builder.setNegativeButton("Descartar", (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
@@ -262,6 +254,8 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
         float calorias = (distanciaTotal / 1000) * peso * 1.036f;
         trilha.setGastoCalorico(calorias);
+
+        trilha.setMapType(googleMap.getMapType());
 
         long id = trilhasDAO.inserirTrilha(trilha);
         trilhasDAO.close();

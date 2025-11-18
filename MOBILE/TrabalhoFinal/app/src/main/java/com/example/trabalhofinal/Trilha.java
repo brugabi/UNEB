@@ -1,4 +1,3 @@
-
 package com.example.trabalhofinal;
 
 public class Trilha {
@@ -11,6 +10,7 @@ public class Trilha {
     private float velocidadeMaxima;
     private float distanciaTotal;
     private String percurso;
+    private int mapType; // NOVO CAMPO
 
     public Trilha() {
     }
@@ -87,5 +87,13 @@ public class Trilha {
 
     public void setPercurso(String percurso) {
         this.percurso = percurso;
+    }
+
+    public int getMapType() {
+        return mapType;
+    }
+
+    public void setMapType(int mapType) {
+        this.mapType = mapType;
     }
 }

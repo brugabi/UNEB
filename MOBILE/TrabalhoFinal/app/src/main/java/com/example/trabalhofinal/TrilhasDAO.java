@@ -36,6 +36,7 @@ public class TrilhasDAO {
         values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MAXIMA, trilha.getVelocidadeMaxima());
         values.put(TrilhasDBHelper.COLUMN_DISTANCIA_TOTAL, trilha.getDistanciaTotal());
         values.put(TrilhasDBHelper.COLUMN_PERCURSO, trilha.getPercurso());
+        values.put(TrilhasDBHelper.COLUMN_MAP_TYPE, trilha.getMapType()); // SALVA O TIPO DE MAPA
 
         return db.insert(TrilhasDBHelper.TABLE_TRILHAS, null, values);
     }
@@ -43,6 +44,7 @@ public class TrilhasDAO {
     public int atualizarTrilha(Trilha trilha) {
         ContentValues values = new ContentValues();
         values.put(TrilhasDBHelper.COLUMN_NOME, trilha.getNome());
+        // O tipo de mapa não deve ser editado, então não é incluído aqui
         return db.update(TrilhasDBHelper.TABLE_TRILHAS, values, TrilhasDBHelper.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(trilha.getId())});
     }
@@ -114,6 +116,7 @@ public class TrilhasDAO {
         trilha.setVelocidadeMaxima(cursor.getFloat(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_VELOCIDADE_MAXIMA)));
         trilha.setDistanciaTotal(cursor.getFloat(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_DISTANCIA_TOTAL)));
         trilha.setPercurso(cursor.getString(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_PERCURSO)));
+        trilha.setMapType(cursor.getInt(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_MAP_TYPE))); // CARREGA O TIPO DE MAPA
         return trilha;
     }
 }
