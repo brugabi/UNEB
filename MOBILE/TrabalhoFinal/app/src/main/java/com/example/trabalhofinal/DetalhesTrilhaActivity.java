@@ -1,12 +1,17 @@
 package com.example.trabalhofinal;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -23,22 +28,26 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallback {
+public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private MapView mapView;
     private GoogleMap googleMap;
     private TextView tvNome, tvDataInicio, tvDataFim, tvDistancia, tvVelMedia, tvVelMaxima, tvCalorias;
-    private Button btnCompartilhar;
+    private Button btnCompartilhar, btnEditarNome, btnApagarTrilha;
 
     private TrilhasDAO trilhasDAO;
     private Trilha trilha;
+    private long trilhaId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detalhes_trilha);
 
-        long trilhaId = getIntent().getLongExtra("TRILHA_ID", -1);
+        Toolbar toolbar = findViewById(R.id.toolbar_detalhes);
+        setSupportActionBar(toolbar);
+
+        trilhaId = getIntent().getLongExtra("TRILHA_ID", -1);
         if (trilhaId == -1) {
             Toast.makeText(this, "Erro: Trilha não encontrada", Toast.LENGTH_SHORT).show();
             finish();
@@ -54,9 +63,22 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
         tvVelMaxima = findViewById(R.id.tv_detalhes_velocidade_maxima);
         tvCalorias = findViewById(R.id.tv_detalhes_gasto_calorico);
         btnCompartilhar = findViewById(R.id.btn_compartilhar);
+        btnEditarNome = findViewById(R.id.btn_editar_nome);
+        btnApagarTrilha = findViewById(R.id.btn_apagar_trilha);
 
-        // --- Carregar dados da trilha ---
         trilhasDAO = new TrilhasDAO(this);
+        carregarDadosTrilha();
+
+        mapView = findViewById(R.id.mapView_detalhes);
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
+
+        btnCompartilhar.setOnClickListener(v -> mostrarDialogoCompartilhar());
+        btnEditarNome.setOnClickListener(v -> mostrarDialogoEditar());
+        btnApagarTrilha.setOnClickListener(v -> mostrarDialogoApagar());
+    }
+
+    private void carregarDadosTrilha() {
         trilhasDAO.open();
         trilha = trilhasDAO.getTrilhaById(trilhaId);
         trilhasDAO.close();
@@ -66,20 +88,13 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
             finish();
             return;
         }
-
         popularViews();
-
-        // --- Inicialização do Mapa ---
-        mapView = findViewById(R.id.mapView_detalhes);
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
-
-        // --- Listener do Botão Compartilhar ---
-        btnCompartilhar.setOnClickListener(v -> mostrarDialogoCompartilhar());
     }
 
     private void popularViews() {
-        setTitle(trilha.getNome()); // Adiciona o nome da trilha na ActionBar
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(trilha.getNome());
+        }
         tvNome.setText("Nome: " + trilha.getNome());
         tvDataInicio.setText("Início: " + trilha.getDataHoraInicio());
         tvDataFim.setText("Fim: " + trilha.getDataHoraFim());
@@ -92,20 +107,69 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
+        aplicarConfiguracoesDoMapa(); // APLICA A CONFIGURAÇÃO DO TIPO DE MAPA
         desenharPercurso();
     }
 
-    private void desenharPercurso() {
-        if (googleMap == null || trilha.getPercurso() == null || trilha.getPercurso().isEmpty()) {
-            return;
+    private void aplicarConfiguracoesDoMapa() {
+        if (googleMap == null) return;
+
+        SharedPreferences settings = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0);
+        int mapTypeId = settings.getInt("tipoMapa", R.id.rb_vetorial);
+
+        if (mapTypeId == R.id.rb_satelite) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        } else {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         }
+    }
 
+    private void mostrarDialogoEditar() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Editar Nome da Trilha");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setText(trilha.getNome());
+        builder.setView(input);
+
+        builder.setPositiveButton("Salvar", (dialog, which) -> {
+            String novoNome = input.getText().toString().trim();
+            if (!novoNome.isEmpty()) {
+                trilha.setNome(novoNome);
+                trilhasDAO.open();
+                trilhasDAO.atualizarTrilha(trilha);
+                trilhasDAO.close();
+                popularViews();
+                Toast.makeText(this, "Nome atualizado!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void mostrarDialogoApagar() {
+        new AlertDialog.Builder(this)
+                .setTitle("Apagar Trilha")
+                .setMessage("Tem certeza que deseja apagar a trilha '" + trilha.getNome() + "'?")
+                .setPositiveButton("Apagar", (dialog, which) -> {
+                    trilhasDAO.open();
+                    trilhasDAO.apagarTrilha(trilha.getId());
+                    trilhasDAO.close();
+                    Toast.makeText(this, "Trilha apagada!", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .setNegativeButton("Cancelar", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    private void desenharPercurso() {
+        if (googleMap == null || trilha.getPercurso() == null || trilha.getPercurso().isEmpty()) return;
         List<LatLng> percursoPoints = parsePercursoString(trilha.getPercurso());
-
         if (percursoPoints.size() > 1) {
             PolylineOptions polylineOptions = new PolylineOptions().addAll(percursoPoints).color(0xFF0000FF).width(10);
             googleMap.addPolyline(polylineOptions);
-
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             for (LatLng latLng : percursoPoints) {
                 builder.include(latLng);
@@ -117,8 +181,6 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(percursoPoints.get(0), 15));
         }
     }
-
-    // --- Lógica de Compartilhamento ---
 
     private void mostrarDialogoCompartilhar() {
         final String[] formatos = {"GPX", "KML", "JSON", "CSV"};
@@ -135,16 +197,11 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
     private String gerarDados(String formato) {
         List<LatLng> percurso = parsePercursoString(trilha.getPercurso());
         switch (formato) {
-            case "GPX":
-                return gerarGPX(percurso);
-            case "KML":
-                return gerarKML(percurso);
-            case "JSON":
-                return gerarJSON();
-            case "CSV":
-                return gerarCSV(percurso);
-            default:
-                return "";
+            case "GPX": return gerarGPX(percurso);
+            case "KML": return gerarKML(percurso);
+            case "JSON": return gerarJSON();
+            case "CSV": return gerarCSV(percurso);
+            default: return "";
         }
     }
 
@@ -154,14 +211,11 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
         sendIntent.putExtra(Intent.EXTRA_TEXT, texto);
         sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Dados da Trilha: " + trilha.getNome());
         sendIntent.setType("text/plain");
-
-        Intent shareIntent = Intent.createChooser(sendIntent, "Compartilhar Trilha via");
-        startActivity(shareIntent);
+        startActivity(Intent.createChooser(sendIntent, "Compartilhar Trilha via"));
     }
 
     private String gerarGPX(List<LatLng> percurso) {
-        StringBuilder gpx = new StringBuilder();
-        gpx.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        StringBuilder gpx = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         gpx.append("<gpx version=\"1.1\" creator=\"TrilhasApp\">\n");
         gpx.append("  <trk>\n");
         gpx.append("    <name>").append(trilha.getNome()).append("</name>\n");
@@ -176,8 +230,7 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
     }
 
     private String gerarKML(List<LatLng> percurso) {
-        StringBuilder kml = new StringBuilder();
-        kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        StringBuilder kml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         kml.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
         kml.append("  <Document>\n");
         kml.append("    <name>").append(trilha.getNome()).append("</name>\n");
@@ -197,13 +250,11 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
     }
 
     private String gerarJSON() {
-        Gson gson = new Gson();
-        return gson.toJson(trilha);
+        return new Gson().toJson(trilha);
     }
 
     private String gerarCSV(List<LatLng> percurso) {
-        StringBuilder csv = new StringBuilder();
-        csv.append("latitude,longitude\n");
+        StringBuilder csv = new StringBuilder("latitude,longitude\n");
         for (LatLng ponto : percurso) {
             csv.append(ponto.latitude).append(",").append(ponto.longitude).append("\n");
         }
@@ -227,7 +278,6 @@ public class DetalhesTrilhaActivity extends Activity implements OnMapReadyCallba
         return latLngs;
     }
 
-    // --- Ciclo de Vida do MapView ---
     @Override
     protected void onResume() { super.onResume(); mapView.onResume(); }
     @Override

@@ -1,10 +1,9 @@
-
 package com.example.trabalhofinal;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -30,6 +29,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -61,6 +61,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     private String dataHoraInicio;
 
     private TrilhasDAO trilhasDAO;
+    private int navigationMode; // Para guardar a preferência de navegação
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
@@ -69,7 +70,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registrar_trilha);
 
-        // --- Inicialização de Views ---
         mapView = findViewById(R.id.mapView);
         btnIniciar = findViewById(R.id.btn_iniciar_trilha);
         btnParar = findViewById(R.id.btn_parar_trilha);
@@ -78,35 +78,45 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         tvCalorias = findViewById(R.id.tv_calorias);
         chronometer = findViewById(R.id.chronometer);
 
-        // --- Inicialização do Mapa ---
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
-        // --- Inicialização do DAO ---
         trilhasDAO = new TrilhasDAO(this);
 
-        // --- Listeners de Botões ---
         btnIniciar.setOnClickListener(v -> startTracking());
         btnParar.setOnClickListener(v -> stopTracking());
 
-        // --- Inicialização do Cliente de Localização ---
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationRequest();
         createLocationCallback();
     }
 
-    // --- Ciclo de Vida do Mapa e Activity ---
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
+        aplicarConfiguracoesDoMapa(); // APLICA AS CONFIGURAÇÕES AQUI
         enableMyLocation();
+    }
+
+    private void aplicarConfiguracoesDoMapa() {
+        if (googleMap == null) return;
+
+        SharedPreferences settings = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0);
+        int mapTypeId = settings.getInt("tipoMapa", R.id.rb_vetorial);
+        navigationMode = settings.getInt("formaNavegacao", R.id.rb_north_up);
+
+        // Define o tipo de mapa (Satélite ou Vetorial)
+        if (mapTypeId == R.id.rb_satelite) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        } else {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        }
     }
 
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
                 googleMap.setMyLocationEnabled(true);
-                // Opcional: mover a câmera para a última localização conhecida
                 fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
                     if (location != null) {
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
@@ -118,55 +128,48 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
-    // --- Lógica de Rastreamento ---
-
     private void startTracking() {
-        if (!isTracking) {
-            isTracking = true;
-            btnIniciar.setEnabled(false);
-            btnParar.setEnabled(true);
+        if (isTracking) return;
+        isTracking = true;
+        btnIniciar.setEnabled(false);
+        btnParar.setEnabled(true);
 
-            // Limpar dados anteriores
-            percurso.clear();
-            distanciaTotal = 0;
-            velocidadeMaxima = 0;
-            ultimaLocalizacao = null;
-            if (polyline != null) {
-                polyline.remove();
-            }
-            polyline = googleMap.addPolyline(new PolylineOptions().color(Color.BLUE).width(10));
+        percurso.clear();
+        distanciaTotal = 0;
+        velocidadeMaxima = 0;
+        ultimaLocalizacao = null;
+        if (polyline != null) polyline.remove();
+        polyline = googleMap.addPolyline(new PolylineOptions().color(Color.BLUE).width(10));
 
-            // Iniciar cronômetro e registrar data/hora
-            chronometer.setBase(SystemClock.elapsedRealtime());
-            chronometer.start();
-            dataHoraInicio = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+        chronometer.setBase(SystemClock.elapsedRealtime());
+        chronometer.start();
+        dataHoraInicio = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-            // Iniciar atualizações de localização
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
-            }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, getMainLooper());
         }
     }
 
     private void stopTracking() {
-        if (isTracking) {
-            isTracking = false;
-            btnIniciar.setEnabled(true);
-            btnParar.setEnabled(false);
+        if (!isTracking) return;
+        isTracking = false;
+        btnIniciar.setEnabled(true);
+        btnParar.setEnabled(false);
 
-            // Parar cronômetro e atualizações
-            chronometer.stop();
-            fusedLocationClient.removeLocationUpdates(locationCallback);
+        chronometer.stop();
+        fusedLocationClient.removeLocationUpdates(locationCallback);
 
-            // Mostrar diálogo para salvar
+        if (percurso.size() > 1) {
             showSaveDialog();
+        } else {
+            Toast.makeText(this, "Trilha muito curta para ser salva.", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void createLocationRequest() {
         locationRequest = LocationRequest.create();
-        locationRequest.setInterval(5000); // 5 segundos
-        locationRequest.setFastestInterval(2000); // 2 segundos
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(2000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
@@ -174,62 +177,61 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
+                if (locationResult == null) return;
                 for (Location location : locationResult.getLocations()) {
-                    updateUI(location);
+                    if (location != null) {
+                        updateUI(location);
+                    }
                 }
             }
         };
     }
 
     private void updateUI(Location location) {
-        if (location == null || !isTracking) return;
+        if (!isTracking || googleMap == null) return;
 
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         percurso.add(latLng);
-
-        // Atualizar Polilinha no mapa
         polyline.setPoints(percurso);
-        googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
 
-        // Calcular velocidade
+        // APLICA O MODO DE NAVEGAÇÃO AQUI
+        if (navigationMode == R.id.rb_course_up && location.hasBearing()) {
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(latLng)
+                    .zoom(googleMap.getCameraPosition().zoom > 15 ? googleMap.getCameraPosition().zoom : 17)
+                    .bearing(location.getBearing())
+                    .tilt(45.0f)
+                    .build();
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        } else { // Modo North Up
+            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+        }
+
         float velocidadeAtual = location.getSpeed() * 3.6f; // m/s para km/h
         tvVelocidade.setText(String.format(Locale.getDefault(), "Velocidade: %.1f km/h", velocidadeAtual));
+        if (velocidadeAtual > velocidadeMaxima) velocidadeMaxima = velocidadeAtual;
 
-        if (velocidadeAtual > velocidadeMaxima) {
-            velocidadeMaxima = velocidadeAtual;
-        }
-
-        // Calcular distância
-        if (ultimaLocalizacao != null) {
-            distanciaTotal += ultimaLocalizacao.distanceTo(location);
-        }
+        if (ultimaLocalizacao != null) distanciaTotal += ultimaLocalizacao.distanceTo(location);
         ultimaLocalizacao = location;
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", distanciaTotal / 1000));
 
-        // Calcular calorias (simplificado)
-        // A fórmula real depende de peso, idade, etc. que viriam das Configurações
-        // Exemplo: (MET * peso * tempo em horas)
-        // Por simplicidade, usaremos uma aproximação grosseira
-        float calorias = (distanciaTotal / 1000) * 60; // Apenas um exemplo
+        // TODO: Usar dados reais do usuário (SharedPreferences) para um cálculo preciso
+        float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
+        long tempoDecorridoHoras = (SystemClock.elapsedRealtime() - chronometer.getBase()) / 3600000;
+        float calorias = (distanciaTotal / 1000) * peso * 1.036f; // Fórmula simples com MET
         tvCalorias.setText(String.format(Locale.getDefault(), "Calorias: %.1f kcal", calorias));
     }
-
-    // --- Persistência de Dados ---
 
     private void showSaveDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Salvar Trilha");
-        builder.setMessage("Dê um nome para a sua trilha:");
-
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setHint("Dê um nome para a trilha");
         builder.setView(input);
 
         builder.setPositiveButton("Salvar", (dialog, which) -> {
-            String nomeTrilha = input.getText().toString();
+            String nomeTrilha = input.getText().toString().trim();
             if (nomeTrilha.isEmpty()) {
                 nomeTrilha = "Trilha de " + dataHoraInicio;
             }
@@ -239,32 +241,26 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
             Toast.makeText(this, "Trilha descartada", Toast.LENGTH_SHORT).show();
             dialog.cancel();
         });
-
         builder.show();
     }
 
     private void salvarTrilha(String nome) {
         trilhasDAO.open();
-
         Trilha trilha = new Trilha();
         trilha.setNome(nome);
         trilha.setDataHoraInicio(dataHoraInicio);
         trilha.setDataHoraFim(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
-        trilha.setDistanciaTotal(distanciaTotal / 1000); // Salvar em km
+        trilha.setDistanciaTotal(distanciaTotal / 1000);
         trilha.setVelocidadeMaxima(velocidadeMaxima);
 
-        // Calcular velocidade média
         long tempoDecorridoSegundos = (SystemClock.elapsedRealtime() - chronometer.getBase()) / 1000;
         float velocidadeMedia = (tempoDecorridoSegundos > 0) ? (distanciaTotal / tempoDecorridoSegundos) * 3.6f : 0;
         trilha.setVelocidadeMedia(velocidadeMedia);
 
-        // Salvar percurso como JSON (ou outro formato)
-        // Gson gson = new Gson();
-        // trilha.setPercurso(gson.toJson(percurso));
-        trilha.setPercurso(percurso.toString()); // Salva uma representação simples por enquanto
+        trilha.setPercurso(percurso.toString());
 
-        // O cálculo de calorias real usaria os dados das SharedPreferences
-        float calorias = (distanciaTotal / 1000) * 60;
+        float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
+        float calorias = (distanciaTotal / 1000) * peso * 1.036f;
         trilha.setGastoCalorico(calorias);
 
         long id = trilhasDAO.inserirTrilha(trilha);
@@ -276,8 +272,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
             Toast.makeText(this, "Erro ao salvar a trilha.", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // --- Boilerplate (Permissões, Ciclo de Vida) ---
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -291,38 +285,15 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        mapView.onResume();
-    }
-
+    protected void onResume() { super.onResume(); mapView.onResume(); }
     @Override
-    protected void onStart() {
-        super.onStart();
-        mapView.onStart();
-    }
-
+    protected void onStart() { super.onStart(); mapView.onStart(); }
     @Override
-    protected void onStop() {
-        super.onStop();
-        mapView.onStop();
-    }
-
+    protected void onStop() { super.onStop(); mapView.onStop(); }
     @Override
-    protected void onPause() {
-        super.onPause();
-        mapView.onPause();
-    }
-
+    protected void onPause() { super.onPause(); mapView.onPause(); }
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mapView.onDestroy();
-    }
-
+    protected void onDestroy() { super.onDestroy(); mapView.onDestroy(); }
     @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        mapView.onLowMemory();
-    }
+    public void onLowMemory() { super.onLowMemory(); mapView.onLowMemory(); }
 }

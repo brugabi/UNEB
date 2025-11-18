@@ -1,19 +1,19 @@
 package com.example.trabalhofinal;
 
-import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
-public class ConfiguracaoActivity extends Activity {
+public class ConfiguracaoActivity extends AppCompatActivity { // MODIFICADO AQUI
 
     private EditText etNomeUsuario, etPeso, etAltura, etDataNascimento;
     private Spinner spinnerSexo;
@@ -26,6 +26,10 @@ public class ConfiguracaoActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_configuracao);
+
+        Toolbar toolbar = findViewById(R.id.toolbar_configuracao);
+        setSupportActionBar(toolbar); // MODIFICADO AQUI
+        getSupportActionBar().setTitle("Configurações"); // Opcional: Define um título
 
         etNomeUsuario = findViewById(R.id.et_nome_usuario);
         etPeso = findViewById(R.id.et_peso);
@@ -73,12 +77,12 @@ public class ConfiguracaoActivity extends Activity {
         try {
             editor.putFloat("peso", Float.parseFloat(etPeso.getText().toString()));
         } catch (NumberFormatException e) {
-            editor.putFloat("peso", 0f); // Salva 0 se o campo estiver inválido ou vazio
+            editor.putFloat("peso", 0f);
         }
         try {
             editor.putFloat("altura", Float.parseFloat(etAltura.getText().toString()));
         } catch (NumberFormatException e) {
-            editor.putFloat("altura", 0f); // Salva 0 se o campo estiver inválido ou vazio
+            editor.putFloat("altura", 0f);
         }
         editor.putString("dataNascimento", etDataNascimento.getText().toString());
         editor.putInt("sexo", spinnerSexo.getSelectedItemPosition());
