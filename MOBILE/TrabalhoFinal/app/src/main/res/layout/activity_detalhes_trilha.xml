@@ -26,16 +26,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tv_detalhes_nome"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Nome da Trilha"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary_blue"
-                android:layout_marginBottom="16dp"/>
-
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
@@ -52,9 +42,9 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="24dp"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/white">
 
                 <LinearLayout
@@ -105,39 +95,42 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <Button
-                android:id="@+id/btn_compartilhar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Compartilhar Trilha"
-                android:backgroundTint="@color/primary_blue"/>
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="2"
-                android:layout_marginTop="8dp">
+                android:layout_marginBottom="12dp">
 
                 <Button
                     android:id="@+id/btn_editar_nome"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:text="Editar"
                     android:textColor="@color/text_dark_blue"
                     android:backgroundTint="#E0E0E0"
+                    app:cornerRadius="8dp"
                     android:layout_marginEnd="4dp"/>
 
                 <Button
                     android:id="@+id/btn_apagar_trilha"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:text="Apagar"
                     android:backgroundTint="@color/red_error"
+                    app:cornerRadius="8dp"
                     android:layout_marginStart="4dp"/>
             </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_compartilhar"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:text="Compartilhar Trilha"
+                android:backgroundTint="@color/primary_blue"
+                app:cornerRadius="8dp"/>
 
         </LinearLayout>
     </ScrollView>

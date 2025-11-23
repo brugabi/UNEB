@@ -11,6 +11,16 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * DAO (Data Access Object) para a entidade {@link Trilha}.
+ *
+ * <p>Esta classe serve como uma camada de abstração entre a lógica de negócios da aplicação e
+ * o banco de dados SQLite. Ela encapsula todas as operações de banco de dados (CRUD - Create,
+ * Read, Update, Delete) relacionadas às trilhas e seus pontos de coordenadas, garantindo que a
+ * complexidade do SQL e do gerenciamento de cursores seja isolada do resto do aplicativo.</p>
+ *
+ * <p>Utiliza a classe {@link TrilhasDBHelper} para criar e gerenciar o banco de dados e suas tabelas.</p>
+ */
 public class TrilhasDAO {
 
     private SQLiteDatabase db;
@@ -36,7 +46,7 @@ public class TrilhasDAO {
             values.put(TrilhasDBHelper.COLUMN_NOME, trilha.getNome());
             values.put(TrilhasDBHelper.COLUMN_DATA_HORA_INICIO, trilha.getDataHoraInicio());
             values.put(TrilhasDBHelper.COLUMN_DATA_HORA_FIM, trilha.getDataHoraFim());
-            values.put(TrilhasDBHelper.COLUMN_DURACAO, trilha.getDuracao()); // SALVANDO DURAÇÃO
+            values.put(TrilhasDBHelper.COLUMN_DURACAO, trilha.getDuracao());
             values.put(TrilhasDBHelper.COLUMN_GASTO_CALORICO, trilha.getGastoCalorico());
             values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MEDIA, trilha.getVelocidadeMedia());
             values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MAXIMA, trilha.getVelocidadeMaxima());
@@ -91,6 +101,15 @@ public class TrilhasDAO {
     }
 
 
+    /**
+     * Recupera todas as trilhas salvas no banco de dados.
+     * As trilhas são ordenadas pela data de início, da mais recente para a mais antiga.
+     * <p>
+     * <b>Nota de performance:</b> Este método não carrega a lista de coordenadas de cada trilha
+     * para otimizar o carregamento da lista principal. As coordenadas são carregadas sob demanda.
+     *
+     * @return Uma {@link List} de objetos {@link Trilha}.
+     */
     public List<Trilha> getAllTrilhas() {
         List<Trilha> trilhas = new ArrayList<>();
         Cursor cursor = db.query(TrilhasDBHelper.TABLE_TRILHAS, null, null, null, null, null, TrilhasDBHelper.COLUMN_DATA_HORA_INICIO + " DESC");
@@ -105,6 +124,12 @@ public class TrilhasDAO {
         return trilhas;
     }
 
+    /**
+     * Recupera uma única trilha pelo seu ID, incluindo todos os seus pontos de coordenadas.
+     *
+     * @param id O ID da trilha a ser buscada.
+     * @return Um objeto {@link Trilha} completo com seus dados e coordenadas, ou {@code null} se não for encontrada.
+     */
     public Trilha getTrilhaById(long id) {
         Cursor cursor = db.query(TrilhasDBHelper.TABLE_TRILHAS, null,
                 TrilhasDBHelper.COLUMN_ID + " = ?",
@@ -122,6 +147,13 @@ public class TrilhasDAO {
         return null;
     }
 
+    /**
+     * Método auxiliar para mapear uma linha do {@link Cursor} para um objeto {@link Trilha}.
+     *
+     * @param cursor O Cursor posicionado na linha correta.
+     * @param carregarPontos Se {@code true}, o método também buscará e associará a lista de coordenadas da trilha.
+     * @return Um objeto {@link Trilha} populado com os dados do cursor.
+     */
     private Trilha cursorToTrilha(Cursor cursor, boolean carregarPontos) {
         Trilha trilha = new Trilha();
         long trilhaId = cursor.getLong(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_ID));
@@ -143,6 +175,12 @@ public class TrilhasDAO {
         return trilha;
     }
 
+    /**
+     * Método auxiliar para buscar todos os pontos de coordenadas associados a uma trilha específica.
+     *
+     * @param trilhaId O ID da trilha cujos pontos devem ser recuperados.
+     * @return Uma {@link List} de objetos {@link LatLng}, ordenada pela coluna 'ordem'.
+     */
     private List<LatLng> getPontosDaTrilha(long trilhaId) {
         List<LatLng> pontos = new ArrayList<>();
         Cursor cursor = db.query(TrilhasDBHelper.TABLE_PONTOS,

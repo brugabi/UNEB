@@ -70,6 +70,29 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    /**
+     * Ponto de entrada da atividade, responsável por inicializar a interface do usuário,
+     * configurar o mapa, preparar os serviços de localização e definir os listeners de eventos.
+     *
+     * <p>Este método executa a seguinte sequência de inicialização:</p>
+     * <ul>
+     *   <li>Define o layout da tela ({@code R.layout.activity_registrar_trilha}).</li>
+     *   <li>Inicializa todos os componentes da UI: {@link MapView}, botões, {@link TextView}s e {@link Chronometer}.</li>
+     *   <li>Invoca {@code mapView.onCreate()} para gerenciar o ciclo de vida do mapa e solicita o objeto
+     *       {@link GoogleMap} de forma assíncrona através de {@code getMapAsync(this)}.</li>
+     *   <li>Instancia o {@link TrilhasDAO} para futuras operações com o banco de dados.</li>
+     *   <li>Define os {@code OnClickListener}s para os botões de iniciar, parar e centralizar o rastreamento.
+     *       A lógica de centralização move a câmera para a última localização conhecida ou tenta obter uma nova.</li>
+     *   <li>Inicializa o {@link FusedLocationProviderClient}, que é o ponto de entrada principal para interagir
+     *       com os serviços de localização do Google Play Services.</li>
+     *   <li>Chama os métodos {@link #createLocationRequest()} e {@link #createLocationCallback()} para
+     *       configurar os parâmetros de precisão/intervalo e o comportamento de recebimento das atualizações de localização.</li>
+     * </ul>
+     *
+     * @param savedInstanceState Se a atividade estiver sendo recriada, este Bundle contém o estado
+     *                           salvo anteriormente. É crucial para o {@code mapView.onCreate()}
+     *                           restaurar o estado do mapa corretamente.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,7 +126,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                 LatLng latLng = new LatLng(ultimaLocalizacao.getLatitude(), ultimaLocalizacao.getLongitude());
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
             } else {
-                // Se não, tentamos forçar uma atualização
+                // Se não força uma atualização
                 enableMyLocation();
             }
         });
@@ -113,18 +136,53 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         createLocationCallback();
     }
 
+    /**
+     * Método de callback invocado quando o mapa está totalmente carregado e pronto para ser utilizado.
+     *
+     * <p>Este método é o ponto central para a configuração inicial do mapa após sua inicialização
+     * assíncrona. As seguintes ações são executadas em sequência:</p>
+     * <ul>
+     *   <li>Atribui a instância do {@link GoogleMap} recebida à variável de membro {@code googleMap},
+     *       tornando-a acessível em toda a atividade.</li>
+     *   <li>Chama {@link #aplicarConfiguracoesDoMapa()} para definir o tipo de mapa (vetorial/satélite)
+     *       e outras preferências do usuário.</li>
+     *   <li>Desativa o botão de localização padrão do Google Maps ({@code MyLocationButton}) para
+     *       permitir o uso de um botão flutuante customizado ({@code btnCentralizar}).</li>
+     *   <li>Invoca {@link #enableMyLocation()} para solicitar permissões (se necessário) e exibir
+     *       a localização atual do usuário no mapa.</li>
+     * </ul>
+     *
+     * @param map A instância do {@link GoogleMap} que está pronta para uso, fornecida pela API do Google Maps.
+     */
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
         aplicarConfiguracoesDoMapa();
 
-        // Desativa o botão padrão do Google (que fica no topo)
-        // para usarmos o nosso no canto inferior direito
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
 
         enableMyLocation();
     }
 
+    /**
+     * Carrega as configurações salvas pelo usuário a partir do SharedPreferences e as aplica
+     * ao mapa e a outras variáveis da atividade.
+     *
+     * <p>Este método é chamado para garantir que as preferências do usuário, definidas na
+     * {@link ConfiguracaoActivity}, sejam refletidas na tela de registro de trilha.
+     * Ele realiza as seguintes ações:</p>
+     * <ul>
+     *   <li>Acessa o arquivo de preferências ({@code PREFS_NAME}).</li>
+     *   <li>Recupera o <b>tipo de mapa</b> (vetorial ou satélite) e o aplica diretamente ao
+     *       objeto {@code googleMap}.</li>
+     *   <li>Obtém o <b>modo de navegação</b> (North Up ou Course Up) e armazena na variável de
+     *       membro {@code navigationMode} para uso posterior durante o rastreamento.</li>
+     *   <li>Carrega o <b>peso do usuário</b>, armazenando-o na variável {@code pesoUsuario}
+     *       para o cálculo de calorias.</li>
+     * </ul>
+     * <p>Possui uma verificação de segurança para não executar caso o {@code googleMap} ainda não
+     * tenha sido inicializado.</p>
+     */
     private void aplicarConfiguracoesDoMapa() {
         if (googleMap == null) return;
 
@@ -141,10 +199,31 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
+    /**
+     * Verifica a permissão de localização e, se concedida, ativa a camada "My Location" no mapa.
+     *
+     * <p>Este método encapsula a lógica para exibir a localização do usuário no mapa. O fluxo é o seguinte:</p>
+     * <ul>
+     *   <li><b>Verifica a Permissão:</b> Checa se a permissão {@code ACCESS_FINE_LOCATION} já foi concedida.</li>
+     *   <li><b>Se Concedida:</b>
+     *     <ol>
+     *       <li>Ativa a camada "My Location" do Google Maps, que exibe o ponto azul e o círculo de precisão.</li>
+     *       <li>Solicita a última localização conhecida ao {@link FusedLocationProviderClient}.</li>
+     *       <li>Se uma localização for encontrada, move a câmera do mapa para essa posição com um zoom padrão,
+     *           proporcionando uma experiência inicial centrada no usuário, e armazena a localização para
+     *           uso futuro pelo botão de centralizar.</li>
+     *     </ol>
+     *   </li>
+     *   <li><b>Se Negada:</b> Inicia o fluxo padrão de solicitação de permissão do Android, exibindo
+     *       a caixa de diálogo para que o usuário possa concedê-la. O resultado dessa solicitação
+     *       será tratado no método de callback {@link #onRequestPermissionsResult(int, String[], int[])}.</li>
+     * </ul>
+     */
+
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
-                googleMap.setMyLocationEnabled(true); // Mostra o ponto azul
+                googleMap.setMyLocationEnabled(true);
 
                 // Move a câmera inicial
                 fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
@@ -159,6 +238,25 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
+    /**
+     * Inicia o processo de rastreamento de uma nova trilha.
+     *
+     * <p>Este método é invocado ao clicar no botão "Iniciar". Ele é responsável por configurar
+     * o estado da aplicação para um novo registro, zerando todas as variáveis de medição,
+     * preparando a interface e ativando as atualizações de localização.</p>
+     *
+     * <p>As seguintes ações são executadas em sequência:</p>
+     * <ul>
+     *   <li>Verifica se o rastreamento já está ativo para evitar execuções duplicadas.</li>
+     *   <li>Atualiza o estado da UI, habilitando o botão "Parar" e desabilitando o "Iniciar".</li>
+     *   <li>Limpa os dados da trilha anterior (coordenadas, distância, velocidade máxima).</li>
+     *   <li>Remove qualquer linha ({@link Polyline}) desenhada no mapa e cria uma nova, vazia.</li>
+     *   <li>Reinicia e inicia o {@link Chronometer}.</li>
+     *   <li>Registra a data e hora de início da trilha.</li>
+     *   <li>Solicita o início das atualizações de localização ao {@link FusedLocationProviderClient},
+     *       que começarão a ser recebidas pelo {@code locationCallback}.</li>
+     * </ul>
+     */
     private void startTracking() {
         if (isTracking) return;
         isTracking = true;
@@ -182,6 +280,23 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
+    /**
+     * Encerra a sessão de rastreamento atual, para o cronômetro e as atualizações de localização.
+     *
+     * <p>Este método é invocado ao clicar no botão "Parar". Ele é responsável por finalizar
+     * a coleta de dados e iniciar o fluxo para salvar a trilha. As seguintes ações são executadas:</p>
+     * <ul>
+     *   <li>Verifica se o rastreamento está ativo para evitar execuções múltiplas.</li>
+     *   <li>Atualiza o estado da UI, reabilitando o botão "Iniciar" e desabilitando o "Parar".</li>
+     *   <li>Para o {@link Chronometer} para registrar a duração final.</li>
+     *   <li>Remove o {@code locationCallback} do {@link FusedLocationProviderClient} para
+     *       interromper o consumo de bateria pelas atualizações de localização.</li>
+     *   <li>Valida se o percurso gravado possui mais de um ponto. Se sim, chama
+     *       {@link #showSaveDialog()} para perguntar ao usuário se deseja salvar a trilha.</li>
+     *   <li>Se o percurso for muito curto, exibe um {@link Toast} informando que a trilha
+     *       não será salva.</li>
+     * </ul>
+     */
     private void stopTracking() {
         if (!isTracking) return;
         isTracking = false;
@@ -204,6 +319,21 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                 .build();
     }
 
+    /**
+     * Cria e inicializa o objeto {@link LocationCallback} responsável por receber as atualizações de localização.
+     *
+     * <p>Este método define o que acontece quando o {@link FusedLocationProviderClient} entrega novos
+     * dados de localização. O {@code locationCallback} é essencialmente o "ouvinte" que reage a cada
+     * nova coordenada recebida durante o rastreamento.</p>
+     *
+     * <p>Dentro do método {@code onLocationResult}, que é o coração do callback:</p>
+     * <ul>
+     *   <li>Ele itera sobre a lista de {@link Location}s fornecida pelo {@link LocationResult} (que pode
+     *       conter múltiplas localizações em um único lote).</li>
+     *   <li>Para cada {@link Location} válida, invoca o método {@link #updateUI(Location)}, delegando a
+     *       responsabilidade de atualizar a interface e calcular as métricas da trilha.</li>
+     * </ul>
+     */
     private void createLocationCallback() {
         locationCallback = new LocationCallback() {
             @Override
@@ -218,6 +348,36 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         };
     }
 
+    /**
+     * Atualiza todos os componentes da interface e as métricas da trilha a cada nova localização recebida.
+     *
+     * <p>Este é o método central do rastreamento, invocado pelo {@code locationCallback} sempre que
+     * uma nova coordenada é obtida. Ele é responsável por todos os cálculos em tempo real e pela
+     * atualização visual da atividade.</p>
+     *
+     * <p>O método executa as seguintes operações em sequência:</p>
+     * <ul>
+     *   <li><b>Velocidade:</b> Calcula a velocidade atual (convertendo de m/s para km/h), atualiza o
+     *       {@link TextView} correspondente e verifica se um novo recorde de velocidade máxima foi atingido.</li>
+     *   <li><b>Distância:</b> Calcula a distância entre a localização atual e a anterior, somando-a à
+     *       distância total acumulada.</li>
+     *   <li><b>Atualização de Posição:</b> Armazena a localização atual como a "última localização" para o
+     *       próximo cálculo de distância.</li>
+     *   <li><b>Desenho no Mapa:</b> Adiciona a nova coordenada à lista do percurso e atualiza a
+     *       {@link Polyline} no mapa para desenhar o trajeto.</li>
+     *   <li><b>Movimento da Câmera:</b> Anima a câmera do mapa para seguir o usuário. A lógica se adapta
+     *       ao {@code navigationMode} definido nas configurações:
+     *       <ul>
+     *           <li><b>Course Up:</b> Orienta o mapa na direção do movimento do usuário, com inclinação e zoom dinâmico.</li>
+     *           <li><b>North Up (padrão):</b> Simplesmente centraliza a câmera na nova localização.</li>
+     *       </ul>
+     *   </li>
+     *   <li><b>Métricas Finais:</b> Atualiza os {@link TextView}s de distância total e calorias gastas,
+     *       recalculando as calorias com base na nova distância.</li>
+     * </ul>
+     *
+     * @param location O novo objeto {@link Location} fornecido pelo {@link com.google.android.gms.location.FusedLocationProviderClient}.
+     */
     private void updateUI(Location location) {
         if (!isTracking || googleMap == null) return;
 
@@ -258,6 +418,22 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         tvCalorias.setText(String.format(Locale.getDefault(), "Calorias: %.1f kcal", calorias));
     }
 
+    /**
+     * Exibe um diálogo de alerta (`AlertDialog`) que permite ao usuário nomear e salvar a trilha recém-gravada.
+     *
+     * <p>Este método é chamado por {@link #stopTracking()} após a conclusão de um percurso válido.
+     * Ele constrói um diálogo que contém um campo de texto ({@link EditText}) para que o usuário
+     * possa inserir um nome personalizado para a trilha.</p>
+     *
+     * <p>O diálogo oferece duas ações principais:</p>
+     * <ul>
+     *   <li><b>Botão Positivo ("Salvar"):</b> Captura o nome inserido. Se o campo estiver vazio,
+     *       gera um nome padrão utilizando a data e hora de início (ex: "Trilha de 2023-10-27 10:30:00").
+     *       Em seguida, invoca o método {@link #salvarTrilha(String)} para persistir os dados no banco.</li>
+     *   <li><b>Botão Negativo ("Descartar"):</b> Cancela a operação e fecha o diálogo. A trilha
+     *       não é salva e seus dados são descartados.</li>
+     * </ul>
+     */
     private void showSaveDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Salvar Trilha");
@@ -276,6 +452,48 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         builder.setNegativeButton("Descartar", (dialog, which) -> dialog.cancel());
         builder.show();
     }
+    /**
+     * Prepara o objeto {@link Trilha} com todos os dados finais e o persiste no banco de dados.
+     * <p>
+     * Esta operação é executada em uma <b>thread de segundo plano</b> para evitar o bloqueio da
+     * interface do usuário (UI Thread), que poderia causar uma experiência ruim ou um erro de
+     * "Application Not Responding" (ANR) caso a escrita no banco de dados demore.
+     *
+     * <p>O fluxo de execução é o seguinte:</p>
+     * <ol>
+     *   <li><b>Preparação na UI Thread:</b>
+     *     <ul>
+     *       <li>Desabilita o botão 'Parar' para evitar cliques duplicados.</li>
+     *       <li>Exibe um {@link Toast} informando ao usuário que o salvamento começou.</li>
+     *       <li>Captura todos os dados necessários que ainda estão na memória (tipo do mapa,
+     *           tempo do cronômetro, etc.).</li>
+     *       <li>Cria uma cópia segura da lista de coordenadas para evitar qualquer
+     *           modificação concorrente.</li>
+     *     </ul>
+     *   </li>
+     *   <li><b>Execução na Background Thread:</b>
+     *     <ul>
+     *       <li>Abre a conexão com o banco de dados.</li>
+     *       <li>Constrói um novo objeto {@link Trilha} e o popula com todos os dados: nome,
+     *           datas, distância, velocidades, etc.</li>
+     *       <li>Calcula a <b>duração total</b> e a <b>velocidade média</b> com base no tempo
+     *           do cronômetro.</li>
+     *       <li>Insere o objeto no banco de dados usando {@code trilhasDAO.inserirTrilha(trilha)}.</li>
+     *       <li>Fecha a conexão com o banco de dados para liberar recursos.</li>
+     *     </ul>
+     *   </li>
+     *   <li><b>Feedback na UI Thread (usando {@code runOnUiThread}):</b>
+     *     <ul>
+     *       <li>Verifica o resultado da inserção. Se for bem-sucedida, exibe um {@link Toast}
+     *           de sucesso e fecha a atividade.</li>
+     *       <li>Se ocorrer um erro, reabilita o botão 'Parar' e exibe uma mensagem de falha.</li>
+     *       <li>Um bloco {@code try-catch} captura exceções críticas e também exibe o erro na UI.</li>
+     *     </ul>
+     *   </li>
+     * </ol>
+     *
+     * @param nome O nome da trilha, fornecido pelo usuário ou gerado automaticamente.
+     */
 
     private void salvarTrilha(String nome) {
         btnParar.setEnabled(false);

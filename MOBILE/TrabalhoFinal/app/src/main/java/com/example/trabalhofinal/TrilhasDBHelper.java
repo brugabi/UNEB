@@ -36,7 +36,6 @@ public class TrilhasDBHelper extends SQLiteOpenHelper {
                     COLUMN_MAP_TYPE + " INTEGER" +
                     ");";
 
-    // Nova Tabela Pontos (Coordenadas) - sem alteração
     public static final String TABLE_PONTOS = "pontos";
     public static final String COLUMN_PONTO_ID = "_id";
     public static final String COLUMN_TRILHA_ID = "trilha_id"; 

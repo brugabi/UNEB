@@ -17,7 +17,6 @@ import java.util.Locale;
 
 public class ConfiguracaoActivity extends AppCompatActivity {
 
-    // Removi etNomeUsuario
     private EditText etPeso, etAltura, etDataNascimento;
     private Spinner spinnerSexo;
     private RadioGroup rgTipoMapa, rgFormaNavegacao;
@@ -38,7 +37,7 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         }
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        // Removido findViewById do nome
+
         etPeso = findViewById(R.id.et_peso);
         etAltura = findViewById(R.id.et_altura);
         etAltura.setFilters(new android.text.InputFilter[]{});
@@ -48,31 +47,39 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         rgFormaNavegacao = findViewById(R.id.rg_forma_navegacao);
         btnSalvar = findViewById(R.id.btn_salvar_configuracoes);
 
-// ... dentro do onCreate ...
 
-        // Configura o Spinner de Sexo usando o nosso layout personalizado (spinner_item)
-        // Isto garante que o texto fica PRETO
+        /* Configura o Spinner de Sexo usando o layout personalizado (spinner_item)
+         Isto garante que o texto fica PRETO */
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.sexo_array, R.layout.spinner_item); // MUDOU AQUI: usa R.layout.spinner_item
+                R.array.sexo_array, R.layout.spinner_item);
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerSexo.setAdapter(adapter);
 
-        // ... resto do código ...
-
         carregarConfiguracoes();
 
-        // Adiciona as máscaras automáticas
+        // Adiciona as máscaras automáticas para os campos de data de nascimento e altura.
         etDataNascimento.addTextChangedListener(getDateMaskListener());
-        etAltura.addTextChangedListener(getHeightMaskListener()); // Nova máscara para altura
+        etAltura.addTextChangedListener(getHeightMaskListener());
 
         btnSalvar.setOnClickListener(v -> salvarConfiguracoes());
     }
 
+    /**     * Recupera as preferências salvas no SharedPreferences e preenche os campos da interface.
+     *
+     * <p>Esta função realiza as seguintes operações:</p>
+     * <ul>
+     *   <li>Acessa o arquivo de preferências definido por <code>PREFS_NAME</code>.</li>
+     *   <li>Carrega o <b>peso</b> e define no campo correspondente (se houver valor salvo).</li>
+     *   <li>Carrega a <b>altura</b> e a formata para o padrão decimal (ex: 1.75) antes de exibir.</li>
+     *   <li>Preenche a <b>data de nascimento</b> e seleciona a opção correta no Spinner de <b>sexo</b>.</li>
+     *   <li>Marca os RadioButtons corretos para <b>Tipo de Mapa</b> (Vetorial/Satélite) e <b>Forma de Navegação</b> (North Up/Course Up),
+     *       usando valores padrão caso não existam configurações prévias.</li>
+     * </ul>
+     */
     private void carregarConfiguracoes() {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-        // Removido carregamento do nome
 
         float peso = settings.getFloat("peso", 0f);
         if (peso > 0) {
@@ -81,7 +88,7 @@ public class ConfiguracaoActivity extends AppCompatActivity {
 
         float altura = settings.getFloat("altura", 0f);
         if (altura > 0) {
-            // Formata para exibir bonito (ex: 1.75) ao carregar
+            // Formata para exibir (ex: 1.75) ao carregar
             etAltura.setText(String.format(Locale.US, "%.2f", altura));
         }
 
@@ -91,11 +98,25 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         rgFormaNavegacao.check(settings.getInt("formaNavegacao", R.id.rb_north_up));
     }
 
+
+    /**
+     * Captura os dados inseridos na interface e salva nas SharedPreferences.
+     *
+     * <p>Este método realiza as seguintes etapas:</p>
+     * <ul>
+     *   <li>Inicia a edição do arquivo de preferências <code>ConfiguracoesPrefs</code>.</li>
+     *   <li>Tenta converter e salvar o <b>peso</b> e a <b>altura</b> como números flutuantes.
+     *       Em caso de erro de formatação (campo vazio ou inválido), salva o valor 0.</li>
+     *   <li>Salva a <b>data de nascimento</b> como String simples.</li>
+     *   <li>Salva o índice da opção selecionada no Spinner de <b>sexo</b>.</li>
+     *   <li>Salva os IDs dos RadioButtons selecionados para <b>Tipo de Mapa</b> e <b>Forma de Navegação</b>.</li>
+     *   <li>Aplica as alterações de forma assíncrona usando <code>editor.apply()</code>.</li>
+     *   <li>Exibe uma mensagem de sucesso e encerra a atividade atual.</li>
+     * </ul>
+     */
     private void salvarConfiguracoes() {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
-
-        // Removido salvamento do nome
 
         try {
             editor.putFloat("peso", Float.parseFloat(etPeso.getText().toString()));
@@ -117,10 +138,25 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         editor.apply();
 
         Toast.makeText(this, "Configurações salvas com sucesso!", Toast.LENGTH_SHORT).show();
-        finish(); // Fecha a tela após salvar (opcional, mas recomendado)
+        finish();
     }
 
-    // Máscara para DATA (##/##/####)
+    /**
+     * Cria e retorna um TextWatcher responsável por aplicar uma máscara de data
+     * no formato (##/##/####) enquanto o usuário digita.
+     *
+     * <p>O funcionamento baseia-se em:</p>
+     * <ul>
+     *   <li>Remover todos os caracteres não numéricos da entrada.</li>
+     *   <li>Reconstruir a string adicionando as barras (/) nas posições corretas.</li>
+     *   <li>Controlar a flag <code>isUpdating</code> para evitar loops infinitos (recursão de chamada).</li>
+     *   <li>Manter o cursor de texto sempre no final da string formatada.</li>
+     * </ul>
+     *
+     * @return Um objeto {@link TextWatcher} configurado para a máscara de data.
+     */
+
+    // Máscara para DATA (##/##/####) */
     private TextWatcher getDateMaskListener() {
         return new TextWatcher() {
             private boolean isUpdating;
@@ -163,8 +199,23 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         };
     }
 
-    // NOVA Máscara para ALTURA (Corrigida para permitir digitar)
-// NOVA Máscara para ALTURA (Corrigida e Testada)
+    /**
+     * Cria e retorna um TextWatcher responsável por aplicar uma máscara de altura
+     * no formato decimal (X.XX) enquanto o usuário digita.
+     *
+     * <p>O funcionamento baseia-se em:</p>
+     * <ul>
+     *   <li>Tratar a entrada como uma sequência pura de dígitos (removendo pontos ou vírgulas).</li>
+     *   <li>Limitar a entrada a 3 dígitos significativos (ex: 175 para 1.75m).</li>
+     *   <li>Dividir o valor inteiro por 100 para obter a representação em metros.</li>
+     *   <li>Formatar o resultado sempre com duas casas decimais usando <code>Locale.US</code> (ponto como separador).</li>
+     *   <li>Controlar a flag <code>isUpdating</code> para evitar loops infinitos ao atualizar o texto programaticamente.</li>
+     * </ul>
+     *
+     * @return Um objeto {@link TextWatcher} configurado para a máscara de altura.
+     */
+
+    //* Máscara para ALTURA (1.75)
     private TextWatcher getHeightMaskListener() {
         return new TextWatcher() {
             private boolean isUpdating;
@@ -179,30 +230,25 @@ public class ConfiguracaoActivity extends AppCompatActivity {
                     return;
                 }
 
-                // 1. Limpa tudo o que não é número
                 String str = s.toString().replaceAll("[^\\d]", "");
 
-                // Se estiver vazio, não faz nada
                 if (str.isEmpty()) {
                     return;
                 }
 
                 try {
-                    // 2. Converte para Long para remover zeros à esquerda (ex: "0017" vira 17)
                     long valorInt = Long.parseLong(str);
 
-                    // 3. Verifica se passou de 3 dígitos significativos (ex: 175 = 1.75m)
                     String strValor = String.valueOf(valorInt);
+
                     if (strValor.length() > 3) {
-                        // Se digitou demais, mantém apenas os 3 primeiros números reais
                         strValor = strValor.substring(0, 3);
                         valorInt = Long.parseLong(strValor);
                     }
 
-                    // 4. Divide por 100 para criar os decimais
                     double valorFinal = valorInt / 100.0;
 
-                    // 5. Formata
+
                     String formatted = String.format(Locale.US, "%.2f", valorFinal);
 
                     isUpdating = true;

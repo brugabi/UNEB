@@ -31,13 +31,36 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
 
     private MapView mapView;
     private GoogleMap googleMap;
-    private TextView tvNome, tvDataInicio, tvDataFim, tvDuracao, tvDistancia, tvVelMedia, tvVelMaxima, tvCalorias;
+    private TextView tvDataInicio, tvDataFim, tvDuracao, tvDistancia, tvVelMedia, tvVelMaxima, tvCalorias;
     private Button btnCompartilhar, btnEditarNome, btnApagarTrilha;
 
     private TrilhasDAO trilhasDAO;
     private Trilha trilha;
     private long trilhaId;
 
+    /**
+     * Ponto de entrada da atividade. Responsável por inicializar a interface,
+     * obter o ID da trilha, carregar seus dados e configurar os listeners de eventos.
+     *
+     * <p>Este método executa a seguinte sequência de inicialização:</p>
+     * <ul>
+     *   <li>Define o layout da tela ({@code R.layout.activity_detalhes_trilha}).</li>
+     *   <li>Configura a {@link Toolbar} com um título provisório e um botão de voltar.</li>
+     *   <li>Recupera o ID da trilha (`TRILHA_ID`) passado pela {@link Intent}. Se o ID for inválido (-1),
+     *       exibe um erro e fecha a atividade.</li>
+     *   <li>Inicializa todos os componentes da UI ({@link TextView}, {@link Button}, etc.).</li>
+     *   <li>Inicializa o {@link TrilhasDAO} para acesso ao banco de dados.</li>
+     *   <li>Inicializa o {@link MapView} de forma segura, passando o estado salvo e
+     *       solicitando o mapa de forma assíncrona ({@code getMapAsync(this)}).</li>
+     *   <li>Chama {@link #carregarDadosTrilha()} para buscar os dados da trilha no banco
+     *       e popular a interface.</li>
+     *   <li>Define os {@code OnClickListener}s para os botões de compartilhar, editar nome e apagar.</li>
+     * </ul>
+     *
+     * @param savedInstanceState Se a atividade estiver sendo recriada após ter sido
+     *                           destruída pelo sistema, este Bundle contém o estado salvo anteriormente.
+     *                           É passado para o {@code mapView.onCreate()} para restaurar o estado do mapa.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,9 +68,10 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
 
         Toolbar toolbar = findViewById(R.id.toolbar_detalhes);
         setSupportActionBar(toolbar);
+
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Detalhes"); // Será atualizado com o nome da trilha
         }
         toolbar.setNavigationOnClickListener(v -> finish());
 
@@ -58,7 +82,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
             return;
         }
 
-        tvNome = findViewById(R.id.tv_detalhes_nome);
+        // Inicializar componentes
         tvDataInicio = findViewById(R.id.tv_detalhes_data_inicio);
         tvDataFim = findViewById(R.id.tv_detalhes_data_fim);
         tvDuracao = findViewById(R.id.tv_detalhes_duracao);
@@ -72,7 +96,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
 
         trilhasDAO = new TrilhasDAO(this);
 
-        // MAPA: Inicialização Clássica (MapView)
+        // INICIALIZAÇÃO SEGURA DO MAPA
         mapView = findViewById(R.id.mapView_detalhes);
         if (mapView != null) {
             mapView.onCreate(savedInstanceState);
@@ -86,6 +110,24 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         btnApagarTrilha.setOnClickListener(v -> mostrarDialogoApagar());
     }
 
+    /**
+     * Carrega os dados da trilha específica do banco de dados com base no {@code trilhaId}.
+     *
+     * <p>Este método é o ponto central para obter os detalhes da trilha. Ele utiliza o
+     * {@code trilhaId} (recebido pela Intent) para consultar o banco de dados através
+     * do {@link TrilhasDAO}.</p>
+     *
+     * <p>O fluxo de execução é o seguinte:</p>
+     * <ul>
+     *   <li>Abre a conexão com o banco de dados.</li>
+     *   <li>Busca o objeto {@link Trilha} completo usando {@code trilhasDAO.getTrilhaById()}.</li>
+     *   <li>Fecha imediatamente a conexão para liberar recursos.</li>
+     *   <li>Verifica se a trilha foi encontrada. Se for nula, exibe um {@link Toast} de erro
+     *       e encerra a atividade para evitar falhas.</li>
+     *   <li>Se a trilha for encontrada, chama o método {@link #popularViews()} para preencher
+     *       todos os componentes da interface com os dados carregados.</li>
+     * </ul>
+     */
     private void carregarDadosTrilha() {
         trilhasDAO.open();
         trilha = trilhasDAO.getTrilhaById(trilhaId);
@@ -99,31 +141,70 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         popularViews();
     }
 
+    /**
+     * Preenche os componentes da interface do usuário (TextViews e Toolbar) com os dados
+     * do objeto {@code trilha} previamente carregado.
+     *
+     * <p>Este método é chamado após a trilha ser recuperada com sucesso do banco de dados.
+     * Ele formata e exibe todas as informações relevantes nos seus respectivos campos na tela,
+     * garantindo que os dados numéricos sejam apresentados de forma legível e com as unidades corretas.</p>
+     *
+     * <p>As ações realizadas incluem:</p>
+     * <ul>
+     *   <li>Atualizar o título da {@link Toolbar} com o nome da trilha.</li>
+     *   <li>Exibir as datas de início e fim, e a duração da atividade.</li>
+     *   <li>Formatar e exibir a distância total, o gasto calórico, a velocidade média e a velocidade máxima
+     *       usando {@code String.format} para garantir a formatação correta dos números decimais.</li>
+     * </ul>
+     * <p><b>Pré-condição:</b> A variável de membro {@code trilha} deve ser não nula e conter dados válidos.</p>
+     */
     private void popularViews() {
-        tvNome.setText(trilha.getNome());
+        // Título na Toolbar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(trilha.getNome());
+        }
+
         tvDataInicio.setText("Início: " + trilha.getDataHoraInicio());
         tvDataFim.setText("Fim: " + trilha.getDataHoraFim());
-        tvDuracao.setText(trilha.getDuracao() != null ? trilha.getDuracao() : "--");
+        tvDuracao.setText("Duração: " + (trilha.getDuracao() != null ? trilha.getDuracao() : "--"));
 
-        tvDistancia.setText(String.format(Locale.getDefault(), "%.2f km", trilha.getDistanciaTotal()));
-        tvCalorias.setText(String.format(Locale.getDefault(), "%.1f kcal", trilha.getGastoCalorico()));
+        tvDistancia.setText(String.format(Locale.getDefault(), "Dist: %.2f km", trilha.getDistanciaTotal()));
+        tvCalorias.setText(String.format(Locale.getDefault(), "Cal: %.1f kcal", trilha.getGastoCalorico()));
         tvVelMedia.setText(String.format(Locale.getDefault(), "Méd: %.1f km/h", trilha.getVelocidadeMedia()));
         tvVelMaxima.setText(String.format(Locale.getDefault(), "Máx: %.1f km/h", trilha.getVelocidadeMaxima()));
     }
 
     @Override
     public void onMapReady(@NonNull GoogleMap map) {
+        if (trilha == null || isFinishing()) return;
+
         googleMap = map;
-        if (trilha != null) {
-            googleMap.setMapType(trilha.getMapType());
-            // Sem padding exagerado porque o mapa está no cartão
-            googleMap.setPadding(0, 0, 0, 0);
-            desenharPercurso();
-        }
+        googleMap.setMapType(trilha.getMapType());
+        // Padding zero pois o mapa está contido no cartão
+        googleMap.setPadding(0, 0, 0, 0);
+        desenharPercurso();
     }
 
+    /**
+     * Desenha o percurso da trilha no objeto {@link GoogleMap}.
+     *
+     * <p>Este método é responsável por renderizar a rota da trilha. Ele verifica a quantidade de
+     * coordenadas disponíveis e age de acordo:</p>
+     * <ul>
+     *   <li><b>Se houver mais de um ponto:</b> Cria uma {@link com.google.android.gms.maps.model.Polyline} conectando todos
+     *       os pontos da trilha. Em seguida, calcula os limites geográficos ({@link com.google.android.gms.maps.model.LatLngBounds})
+     *       que englobam todo o percurso e move a câmera do mapa para que toda a trilha seja visível
+     *       com uma margem de 50 pixels. Um bloco try-catch é usado para o caso de a câmera não conseguir
+     *       se mover para os limites, fornecendo um fallback que foca no ponto inicial.</li>
+     *   <li><b>Se houver apenas um ponto:</b> Move a câmera para este único ponto com um nível de zoom fixo e
+     *       adiciona um {@link com.google.android.gms.maps.model.Marker} para indicar a localização.</li>
+     *   <li><b>Se não houver pontos:</b> O método não executa nenhuma ação.</li>
+     * </ul>
+     * <p><b>Pré-condições:</b> O método deve ser chamado após o mapa estar pronto (dentro ou após {@code onMapReady})
+     * e as variáveis {@code googleMap} e {@code trilha} estarem devidamente inicializadas.</p>
+     */
     private void desenharPercurso() {
-        if (googleMap == null || trilha == null || trilha.getCoordenadas() == null || trilha.getCoordenadas().isEmpty()) return;
+        if (googleMap == null || trilha.getCoordenadas() == null || trilha.getCoordenadas().isEmpty()) return;
 
         List<LatLng> percursoPoints = trilha.getCoordenadas();
 
@@ -132,7 +213,9 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
             googleMap.addPolyline(polylineOptions);
 
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
-            for (LatLng latLng : percursoPoints) builder.include(latLng);
+            for (LatLng latLng : percursoPoints) {
+                builder.include(latLng);
+            }
 
             try {
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 50));
@@ -140,14 +223,12 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(percursoPoints.get(0), 15));
             }
         } else if (percursoPoints.size() == 1) {
-            LatLng ponto = percursoPoints.get(0);
-            googleMap.addMarker(new MarkerOptions().position(ponto).title("Início"));
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ponto, 15));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(percursoPoints.get(0), 15));
+            googleMap.addMarker(new MarkerOptions().position(percursoPoints.get(0)).title("Início"));
         }
     }
 
-    // --- CICLO DE VIDA OBRIGATÓRIO DO MAPVIEW (Para não crashar!) ---
-    // Verifica sempre se mapView != null antes de chamar os métodos
+    // CICLO DE VIDA MAPVIEW
 
     @Override
     protected void onResume() {
@@ -175,10 +256,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
 
     @Override
     protected void onDestroy() {
-        // Limpa o mapa para evitar memory leaks
-        if (mapView != null) {
-            mapView.onDestroy();
-        }
+        if (mapView != null) mapView.onDestroy();
         super.onDestroy();
     }
 
@@ -194,7 +272,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         if (mapView != null) mapView.onSaveInstanceState(outState);
     }
 
-    // --- MÉTODOS AUXILIARES (Iguais) ---
+    // MÉTODOS AUXILIARES
 
     private void mostrarDialogoEditar() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -210,8 +288,8 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
                 trilhasDAO.open();
                 trilhasDAO.atualizarTrilha(trilha);
                 trilhasDAO.close();
-                popularViews();
-                Toast.makeText(this, "Atualizado!", Toast.LENGTH_SHORT).show();
+                popularViews(); // Atualiza também o título na Toolbar
+                Toast.makeText(this, "Nome atualizado!", Toast.LENGTH_SHORT).show();
             }
         });
         builder.setNegativeButton("Cancelar", null);
@@ -219,23 +297,46 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
     }
 
     private void mostrarDialogoApagar() {
-        new AlertDialog.Builder(this).setTitle("Apagar").setMessage("Confirmar?").setPositiveButton("Sim", (d,w) -> {
-            trilhasDAO.open(); trilhasDAO.apagarTrilha(trilha.getId()); trilhasDAO.close(); finish();
-        }).setNegativeButton("Não", null).show();
+        new AlertDialog.Builder(this).setTitle("Apagar Trilha").setMessage("Tem certeza?")
+                .setPositiveButton("Apagar", (d,w) -> {
+                    trilhasDAO.open(); trilhasDAO.apagarTrilha(trilha.getId()); trilhasDAO.close();
+                    finish();
+                }).setNegativeButton("Cancelar", null).show();
     }
 
     private void mostrarDialogoCompartilhar() {
         final String[] formatos = {"GPX", "KML", "JSON", "CSV"};
-        new AlertDialog.Builder(this).setTitle("Formato").setItems(formatos, (d, w) -> compartilharTexto(gerarDados(formatos[w]))).show();
+        new AlertDialog.Builder(this).setTitle("Escolha o formato").setItems(formatos, (d, w) -> {
+            compartilharTexto(gerarDados(formatos[w]));
+        }).show();
     }
 
     private void compartilharTexto(String texto) {
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("text/plain");
         i.putExtra(Intent.EXTRA_TEXT, texto);
-        startActivity(Intent.createChooser(i, "Compartilhar"));
+        startActivity(Intent.createChooser(i, "Compartilhar Trilha via"));
     }
 
+    /**
+     * Gera uma representação em String dos dados da trilha no formato especificado.
+     *
+     * <p>Este método atua como um despachante (dispatcher), recebendo o formato desejado como
+     * parâmetro e invocando o método de geração correspondente. Ele centraliza a lógica
+     * de exportação de dados, facilitando a adição de novos formatos no futuro.</p>
+     *
+     * <p>Os formatos suportados são:</p>
+     * <ul>
+     *   <li><b>GPX:</b> Chama {@link #gerarGPX(List)}.</li>
+     *   <li><b>KML:</b> Chama {@link #gerarKML(List)}.</li>
+     *   <li><b>JSON:</b> Utiliza a biblioteca Gson para serializar o objeto {@link Trilha} completo.</li>
+     *   <li><b>CSV:</b> Chama {@link #gerarCSV(List)}.</li>
+     * </ul>
+     *
+     * @param formato A {@link String} representando o formato de exportação desejado (ex: "GPX", "KML").
+     * @return Uma {@link String} contendo os dados da trilha formatados. Retorna uma string vazia
+     *         se a trilha for nula ou se o formato não for reconhecido.
+     */
     private String gerarDados(String formato) {
         if (trilha == null) return "";
         switch (formato) {
@@ -247,7 +348,6 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         }
     }
 
-    // Métodos de geração (resumidos, podes manter os teus originais)
     private String gerarGPX(List<LatLng> l) {
         StringBuilder sb = new StringBuilder("<?xml version=\"1.0\"?><gpx><trk><trkseg>");
         if(l!=null) for(LatLng p:l) sb.append("<trkpt lat=\"").append(p.latitude).append("\" lon=\"").append(p.longitude).append("\"/>");

@@ -4,12 +4,21 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Representa o modelo de dados para uma única trilha (ou percurso) registrada pelo usuário.
+ *
+ * <p>Esta classe é um POJO (Plain Old Java Object) que encapsula todas as informações
+ * pertinentes a uma atividade de rastreamento, como nome, métricas de desempenho
+ * (distância, velocidade), dados temporais e as coordenadas geográficas do percurso.
+ * Ela serve como a estrutura de dados principal para armazenamento no banco de dados
+ * e para exibição na interface do usuário.</p>
+ */
 public class Trilha {
     private long id;
     private String nome;
     private String dataHoraInicio;
     private String dataHoraFim;
-    private String duracao; // NOVO CAMPO
+    private String duracao;
     private float gastoCalorico;
     private float velocidadeMedia;
     private float velocidadeMaxima;

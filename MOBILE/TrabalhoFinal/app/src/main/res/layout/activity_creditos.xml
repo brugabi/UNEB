@@ -79,12 +79,13 @@
                         android:layout_marginBottom="8dp"/>
 
                     <TextView
+                        android:id="@+id/meu_git"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Seu Nome Aqui"
-                        android:textSize="18sp"
-                        android:textColor="@color/black"
-                        android:layout_marginBottom="4dp"/>
+                        android:layout_marginBottom="4dp"
+                        android:text="Brunna Gabriella de Moura da Silva"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="18sp" />
 
                     <TextView
                         android:layout_width="wrap_content"

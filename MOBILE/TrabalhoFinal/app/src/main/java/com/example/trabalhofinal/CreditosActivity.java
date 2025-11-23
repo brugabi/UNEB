@@ -23,7 +23,7 @@ public class CreditosActivity extends AppCompatActivity {
         }
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        // Configurar o clique no link do GitHub
+        // Configurar o clique no link do GitHub do repositorio
         View btnGithub = findViewById(R.id.container_github);
         btnGithub.setOnClickListener(v -> {
             String url = "https://github.com/brugabi/UNEB/tree/309f2e31b6e531cab0b17bc91578f49926ec9733/MOBILE/TrabalhoFinal";
@@ -31,5 +31,15 @@ public class CreditosActivity extends AppCompatActivity {
             intent.setData(Uri.parse(url));
             startActivity(intent);
         });
+
+        //Link do Github meu
+        View btnMeuGit = findViewById(R.id.meu_git);
+        btnMeuGit.setOnClickListener(v -> {
+            String url = "https://github.com/brugabi";
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(url));
+            startActivity(intent);
+        });
     }
+
 }
