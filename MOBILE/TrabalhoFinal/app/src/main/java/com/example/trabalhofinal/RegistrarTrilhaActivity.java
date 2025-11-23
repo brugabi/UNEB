@@ -33,6 +33,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     private MapView mapView;
     private GoogleMap googleMap;
     private Button btnIniciar, btnParar;
+    private FloatingActionButton btnCentralizar; // Novo Botão
     private TextView tvVelocidade, tvVelocidadeMaxima, tvDistancia, tvCalorias;
     private Chronometer chronometer;
 
@@ -64,7 +66,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     private TrilhasDAO trilhasDAO;
     private int navigationMode;
 
-    // Variável global para armazenar o peso e evitar leituras repetitivas
     private float pesoUsuario = 70f;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -77,6 +78,8 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         mapView = findViewById(R.id.mapView);
         btnIniciar = findViewById(R.id.btn_iniciar_trilha);
         btnParar = findViewById(R.id.btn_parar_trilha);
+        btnCentralizar = findViewById(R.id.btn_centralizar); // Ligar o botão
+
         tvVelocidade = findViewById(R.id.tv_velocidade);
         tvVelocidadeMaxima = findViewById(R.id.tv_velocidade_maxima);
         tvDistancia = findViewById(R.id.tv_distancia);
@@ -91,6 +94,20 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         btnIniciar.setOnClickListener(v -> startTracking());
         btnParar.setOnClickListener(v -> stopTracking());
 
+        // Lógica do Botão Centralizar
+        btnCentralizar.setOnClickListener(v -> {
+            if (googleMap == null) return;
+
+            // Se tivermos a última localização, movemos a câmera para lá
+            if (ultimaLocalizacao != null) {
+                LatLng latLng = new LatLng(ultimaLocalizacao.getLatitude(), ultimaLocalizacao.getLongitude());
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
+            } else {
+                // Se não, tentamos forçar uma atualização
+                enableMyLocation();
+            }
+        });
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationRequest();
         createLocationCallback();
@@ -100,6 +117,11 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     public void onMapReady(GoogleMap map) {
         googleMap = map;
         aplicarConfiguracoesDoMapa();
+
+        // Desativa o botão padrão do Google (que fica no topo)
+        // para usarmos o nosso no canto inferior direito
+        googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+
         enableMyLocation();
     }
 
@@ -110,7 +132,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         int mapTypeId = settings.getInt("tipoMapa", R.id.rb_vetorial);
         navigationMode = settings.getInt("formaNavegacao", R.id.rb_north_up);
 
-        // Atualiza o peso sempre que as configurações forem carregadas
         pesoUsuario = settings.getFloat("peso", 70f);
 
         if (mapTypeId == R.id.rb_satelite) {
@@ -123,9 +144,12 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
-                googleMap.setMyLocationEnabled(true);
+                googleMap.setMyLocationEnabled(true); // Mostra o ponto azul
+
+                // Move a câmera inicial
                 fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
                     if (location != null) {
+                        ultimaLocalizacao = location; // Guarda para usar no botão
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
                     }
                 });
@@ -216,7 +240,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         percurso.add(latLng);
         polyline.setPoints(percurso);
 
-        // Lógica de animação otimizada
         if (navigationMode == R.id.rb_course_up && location.hasBearing()) {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
@@ -224,7 +247,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                     .bearing(location.getBearing())
                     .tilt(45.0f)
                     .build();
-            // Reduzido para 200ms para evitar conflito com atualizações rápidas do GPS
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 200, null);
         } else {
             googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng), 200, null);
@@ -232,7 +254,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
 
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", distanciaTotal / 1000));
 
-        // Usa a variável em memória (pesoUsuario) em vez de ler do disco
         float calorias = (distanciaTotal / 1000) * pesoUsuario * 1.036f;
         tvCalorias.setText(String.format(Locale.getDefault(), "Calorias: %.1f kcal", calorias));
     }
@@ -257,22 +278,16 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     }
 
     private void salvarTrilha(String nome) {
-        // Bloqueia botões e avisa o utilizador
         btnParar.setEnabled(false);
         Toast.makeText(this, "A salvar trilha...", Toast.LENGTH_SHORT).show();
 
-        // --- PASSO 1: CAPTURAR DADOS DA UI (NA THREAD PRINCIPAL) ---
-        // Temos de ler estas propriedades AQUI, antes de entrar na thread secundária
         final int mapType = googleMap.getMapType();
         final long baseCronometro = chronometer.getBase();
-        final long tempoAtual = SystemClock.elapsedRealtime(); // Captura o tempo exato do clique
+        final long tempoAtual = SystemClock.elapsedRealtime();
 
-        // Fazemos uma cópia segura da lista de pontos para a outra thread não dar erro se o GPS atualizar
         final List<LatLng> percursoSeguro = new ArrayList<>(percurso);
-
         final String dataFim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-        // --- PASSO 2: INICIAR O TRABALHO PESADO EM SEGUNDO PLANO ---
         new Thread(() -> {
             try {
                 trilhasDAO.open();
@@ -282,7 +297,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                 trilha.setDataHoraFim(dataFim);
                 trilha.setDistanciaTotal(distanciaTotal / 1000);
 
-                // Cálculos matemáticos (seguro fazer em background)
                 long tempoDecorridoMillis = tempoAtual - baseCronometro;
                 long tempoDecorridoSegundos = tempoDecorridoMillis / 1000;
                 float velocidadeMedia = (tempoDecorridoSegundos > 0) ? (distanciaTotal / tempoDecorridoSegundos) * 3.6f : 0;
@@ -296,20 +310,16 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                 String duracao = String.format(Locale.getDefault(), "%02dh %02dm %02ds", horas, minutos, segundos);
                 trilha.setDuracao(duracao);
 
-                // Usa a lista segura que copiamos lá em cima
                 trilha.setCoordenadas(percursoSeguro);
 
-                // Usa o peso que já está na memória
                 float calorias = (distanciaTotal / 1000) * pesoUsuario * 1.036f;
                 trilha.setGastoCalorico(calorias);
 
-                // Usa o tipo de mapa capturado antes da thread
                 trilha.setMapType(mapType);
 
                 long id = trilhasDAO.inserirTrilha(trilha);
                 trilhasDAO.close();
 
-                // Volta para a Thread Principal SÓ para mostrar o sucesso
                 runOnUiThread(() -> {
                     if (id != -1) {
                         Toast.makeText(RegistrarTrilhaActivity.this, "Trilha \"" + nome + "\" salva com sucesso!", Toast.LENGTH_LONG).show();
@@ -346,7 +356,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     protected void onResume() {
         super.onResume();
         mapView.onResume();
-        // Recarrega as configurações (incluindo o peso) ao voltar para a tela
         aplicarConfiguracoesDoMapa();
     }
 

@@ -34,7 +34,9 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Configurações");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+        toolbar.setNavigationOnClickListener(v -> finish());
 
         // Removido findViewById do nome
         etPeso = findViewById(R.id.et_peso);
@@ -46,11 +48,17 @@ public class ConfiguracaoActivity extends AppCompatActivity {
         rgFormaNavegacao = findViewById(R.id.rg_forma_navegacao);
         btnSalvar = findViewById(R.id.btn_salvar_configuracoes);
 
-        // Configura o Spinner de Sexo
+// ... dentro do onCreate ...
+
+        // Configura o Spinner de Sexo usando o nosso layout personalizado (spinner_item)
+        // Isto garante que o texto fica PRETO
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.sexo_array, android.R.layout.simple_spinner_item);
+                R.array.sexo_array, R.layout.spinner_item); // MUDOU AQUI: usa R.layout.spinner_item
+
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerSexo.setAdapter(adapter);
+
+        // ... resto do código ...
 
         carregarConfiguracoes();
 

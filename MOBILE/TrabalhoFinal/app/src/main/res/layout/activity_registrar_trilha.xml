@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background_blue">
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
@@ -9,77 +11,121 @@
         android:layout_height="match_parent" />
 
     <LinearLayout
-        android:id="@+id/ll_botoes"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:gravity="center_horizontal"
-        android:padding="8dp">
-
-        <Button
-            android:id="@+id/btn_iniciar_trilha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Iniciar" />
-
-        <Button
-            android:id="@+id/btn_parar_trilha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:text="Parar" />
-    </LinearLayout>
-
-    <LinearLayout
+        android:id="@+id/info_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_alignParentBottom="true"
-        android:background="#80000000"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/tv_velocidade"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:text="Velocidade: 0 km/h" />
-
-        <!-- NOVO CAMPO ADICIONADO -->
-        <TextView
-            android:id="@+id/tv_velocidade_maxima"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:text="Vel. Máxima: 0 km/h" />
-
-        <TextView
-            android:id="@+id/tv_distancia"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:text="Distância: 0 km" />
-
-        <TextView
-            android:id="@+id/tv_calorias"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:text="Calorias: 0 kcal" />
+        android:background="#F0FFFFFF"
+        android:padding="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="50dp"
+        android:elevation="6dp">
 
         <Chronometer
             android:id="@+id/chronometer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:layout_gravity="center"
             android:textSize="24sp"
-            android:layout_marginTop="8dp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="@color/primary_blue"
+            android:layout_marginBottom="8dp"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <TextView
+                android:id="@+id/tv_velocidade"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Vel: 0.0 km/h"
+                android:textColor="@color/text_dark_blue"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tv_distancia"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dist: 0.00 km"
+                android:textColor="@color/text_dark_blue"
+                android:gravity="end"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tv_calorias"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cal: 0 kcal"
+                android:textColor="@color/gray_text"/>
+
+            <TextView
+                android:id="@+id/tv_velocidade_maxima"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Máx: 0.0 km/h"
+                android:textColor="@color/gray_text"
+                android:gravity="end"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btn_centralizar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="110dp"
+        android:src="@android:drawable/ic_menu_mylocation"
+        app:backgroundTint="@color/white"
+        app:tint="@color/primary_blue"
+        app:elevation="6dp"
+        android:contentDescription="Centralizar no Usuário" />
+
+    <LinearLayout
+        android:id="@+id/bottom_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:weightSum="2"
+        android:background="#CCFFFFFF">
+
+        <Button
+            android:id="@+id/btn_iniciar_trilha"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="INICIAR"
+            android:backgroundTint="@color/green_success"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btn_parar_trilha"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="PARAR / SALVAR"
+            android:backgroundTint="@color/red_error"
+            android:layout_marginStart="8dp"
+            android:enabled="false"/>
     </LinearLayout>
 
 </RelativeLayout>

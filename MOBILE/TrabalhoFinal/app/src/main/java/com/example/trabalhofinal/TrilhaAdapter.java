@@ -1,4 +1,3 @@
-
 package com.example.trabalhofinal;
 
 import android.content.Context;
@@ -7,43 +6,47 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import java.util.List;
 import java.util.Locale;
 
-/* Adapta a lista de dados (Trilha) para um formato
-que a ListView consegue entender e exibir visualmente, um item de cada vez. */
 public class TrilhaAdapter extends ArrayAdapter<Trilha> {
 
-    public TrilhaAdapter(@NonNull Context context, @NonNull List<Trilha> trilhas) {
+    public TrilhaAdapter(Context context, List<Trilha> trilhas) {
         super(context, 0, trilhas);
     }
 
-    @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        // Pega o item de dados para esta posição
-        Trilha trilha = getItem(position);
-
-        // Verifica se uma view existente está sendo reutilizada, caso contrário, infla a view
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // Verifica se existe uma view reutilizável, senão infla uma nova
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_trilha, parent, false);
         }
 
-        // Procura as views para popular os dados
+        // Pega o item de dados para esta posição
+        Trilha trilha = getItem(position);
+
+        // Procura as views para popular os dados (IDs atualizados conforme o novo layout)
         TextView tvNome = convertView.findViewById(R.id.tv_nome_trilha);
         TextView tvData = convertView.findViewById(R.id.tv_data_trilha);
-        TextView tvDistancia = convertView.findViewById(R.id.tv_distancia_trilha);
+        TextView tvDetalhes = convertView.findViewById(R.id.tv_detalhes_resumo); // ID NOVO
 
-        // Popula os dados na view do template usando o objeto de dados
+        // Popula os dados nas views
         if (trilha != null) {
             tvNome.setText(trilha.getNome());
-            tvData.setText("Data: " + trilha.getDataHoraInicio());
-            tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", trilha.getDistanciaTotal()));
+
+            // Formata a data (pode ser ajustado conforme o formato salvo no banco)
+            tvData.setText(trilha.getDataHoraInicio());
+
+            // Cria o texto de resumo: "5.20 km • 01h 30m 00s"
+            String duracaoTexto = (trilha.getDuracao() != null) ? trilha.getDuracao() : "--";
+            String resumo = String.format(Locale.getDefault(), "%.2f km • %s",
+                    trilha.getDistanciaTotal(),
+                    duracaoTexto);
+
+            tvDetalhes.setText(resumo);
         }
 
-        // Retorna a view completa para renderizar na tela
         return convertView;
     }
 }

@@ -31,15 +31,25 @@ public class ConsultarTrilhasActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar_consultar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Consultar Trilhas"); // TÍTULO CORRIGIDO AQUI
+
+        // --- NOVO: Configuração do Botão Voltar ---
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Consultar Trilhas");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Mostra a seta de voltar
+        }
+        toolbar.setNavigationOnClickListener(v -> finish()); // Define a ação de fechar a tela
+        // ------------------------------------------
 
         listViewTrilhas = findViewById(R.id.list_view_trilhas);
         trilhasDAO = new TrilhasDAO(this);
 
+        // Configura a seleção múltipla para apagar vários itens (Batch Delete)
         listViewTrilhas.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         listViewTrilhas.setMultiChoiceModeListener(new MultiChoiceModeListener());
 
+        // Clique simples abre os detalhes
         listViewTrilhas.setOnItemClickListener((parent, view, position, id) -> {
+            // Só abre detalhes se não estivermos em modo de seleção (exclusão)
             if (listViewTrilhas.getCheckedItemCount() == 0) {
                 Trilha trilhaSelecionada = trilhas.get(position);
                 Intent intent = new Intent(ConsultarTrilhasActivity.this, DetalhesTrilhaActivity.class);
@@ -76,6 +86,10 @@ public class ConsultarTrilhasActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.menu_apagar_todas) {
             mostrarDialogoApagarTodas();
             return true;
+        } else if (item.getItemId() == android.R.id.home) {
+            // Garante que o botão físico/lógico de voltar na Toolbar funcione
+            finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -96,6 +110,7 @@ public class ConsultarTrilhasActivity extends AppCompatActivity {
                 .show();
     }
 
+    // Classe interna para gerir a seleção múltipla (clique longo)
     private class MultiChoiceModeListener implements AbsListView.MultiChoiceModeListener {
         @Override
         public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
@@ -149,7 +164,7 @@ public class ConsultarTrilhasActivity extends AppCompatActivity {
                     trilhasDAO.apagarTrilhas(idsParaApagar);
                     trilhasDAO.close();
                     carregarTrilhas();
-                    mode.finish();
+                    mode.finish(); // Fecha o modo de seleção
                     Toast.makeText(this, "Trilhas selecionadas foram apagadas.", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancelar", null)
