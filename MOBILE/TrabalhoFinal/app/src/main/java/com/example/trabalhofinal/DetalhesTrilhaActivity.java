@@ -18,6 +18,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 
@@ -95,7 +96,6 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         tvNome.setText("Nome: " + trilha.getNome());
         tvDataInicio.setText("Início: " + trilha.getDataHoraInicio());
         tvDataFim.setText("Fim: " + trilha.getDataHoraFim());
-        // Exibindo a duração salva diretamente do objeto
         tvDuracao.setText("Duração: " + (trilha.getDuracao() != null ? trilha.getDuracao() : "--"));
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", trilha.getDistanciaTotal()));
         tvVelMedia.setText(String.format(Locale.getDefault(), "Vel. Média: %.1f km/h", trilha.getVelocidadeMedia()));
@@ -154,7 +154,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
 
     private void desenharPercurso() {
         if (googleMap == null || trilha.getCoordenadas() == null || trilha.getCoordenadas().isEmpty()) return;
-        
+
         List<LatLng> percursoPoints = trilha.getCoordenadas();
 
         if (percursoPoints.size() > 1) {
@@ -168,7 +168,10 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
             int padding = 100;
             googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
         } else if (percursoPoints.size() == 1) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(percursoPoints.get(0), 15));
+            // Se houver apenas 1 ponto, adiciona um marcador e move a câmera
+            LatLng ponto = percursoPoints.get(0);
+            googleMap.addMarker(new MarkerOptions().position(ponto).title("Ponto Inicial"));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ponto, 15));
         }
     }
 
@@ -187,7 +190,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
     private String gerarDados(String formato) {
         List<LatLng> percurso = trilha.getCoordenadas();
         if (percurso == null) percurso = new ArrayList<>();
-        
+
         switch (formato) {
             case "GPX": return gerarGPX(percurso);
             case "KML": return gerarKML(percurso);
@@ -255,7 +258,6 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
     }
 
     private String gerarJSON() {
-        // Agora o Gson serializa a duração automaticamente porque ela está no objeto Trilha
         return new Gson().toJson(trilha);
     }
 

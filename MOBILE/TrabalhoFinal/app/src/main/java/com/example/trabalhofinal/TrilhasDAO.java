@@ -90,11 +90,6 @@ public class TrilhasDAO {
         db.delete(TrilhasDBHelper.TABLE_TRILHAS, null, null);
     }
 
-    public void apagarTrilhasPorIntervalo(String dataInicio, String dataFim) {
-        db.delete(TrilhasDBHelper.TABLE_TRILHAS,
-                TrilhasDBHelper.COLUMN_DATA_HORA_INICIO + " BETWEEN ? AND ?",
-                new String[]{dataInicio, dataFim});
-    }
 
     public List<Trilha> getAllTrilhas() {
         List<Trilha> trilhas = new ArrayList<>();

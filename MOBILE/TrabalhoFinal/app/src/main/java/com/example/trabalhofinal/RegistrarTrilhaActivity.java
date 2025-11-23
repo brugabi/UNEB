@@ -10,7 +10,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.InputType;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.EditText;
@@ -65,9 +64,11 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     private TrilhasDAO trilhasDAO;
     private int navigationMode;
 
+    // Variável global para armazenar o peso e evitar leituras repetitivas
+    private float pesoUsuario = 70f;
+
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
-    /*Funcao da tela principal com os botoes e o mapview */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,13 +103,15 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         enableMyLocation();
     }
 
-    /*Funcao para aplicar as configuracoes do mapa, satelite ou vetorial, e o tipo de navegacao, northup ou courseup, selecionado pelo usuário */
     private void aplicarConfiguracoesDoMapa() {
         if (googleMap == null) return;
 
         SharedPreferences settings = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0);
         int mapTypeId = settings.getInt("tipoMapa", R.id.rb_vetorial);
         navigationMode = settings.getInt("formaNavegacao", R.id.rb_north_up);
+
+        // Atualiza o peso sempre que as configurações forem carregadas
+        pesoUsuario = settings.getFloat("peso", 70f);
 
         if (mapTypeId == R.id.rb_satelite) {
             googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
@@ -117,7 +120,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
-    //Funcao para permicao de acesso a localizacao
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
@@ -133,7 +135,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
-    /*Funcao de iniciar o percurso com o traçado dele e o cronometro */
     private void startTracking() {
         if (isTracking) return;
         isTracking = true;
@@ -157,7 +158,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
-    /*Para o percurso e verifica se é a distancia e significativa, maior que 1 metro, para salvar a trilha */
     private void stopTracking() {
         if (!isTracking) return;
         isTracking = false;
@@ -175,13 +175,11 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     }
 
     private void createLocationRequest() {
-        // Intervalo reduzido para 500ms (0.5s) para maior fluidez no Course Up
         locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
                 .setMinUpdateIntervalMillis(250)
                 .build();
     }
 
-    // Callback para aguardar o Android enviar novas atualizacoes de localizacao
     private void createLocationCallback() {
         locationCallback = new LocationCallback() {
             @Override
@@ -196,8 +194,6 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         };
     }
 
-    /* Funcao de dar update calculando a velocidade, as calorias e a distancia percorrida.
-    * Atualiza o mapa conforme as preferencias do usuario, se for corse up navigation mode da update na camera*/
     private void updateUI(Location location) {
         if (!isTracking || googleMap == null) return;
 
@@ -216,11 +212,11 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
         ultimaLocalizacao = location;
 
-        // Atualiza o mapa e calorias
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         percurso.add(latLng);
         polyline.setPoints(percurso);
 
+        // Lógica de animação otimizada
         if (navigationMode == R.id.rb_course_up && location.hasBearing()) {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
@@ -228,21 +224,19 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                     .bearing(location.getBearing())
                     .tilt(45.0f)
                     .build();
-            // Animação rápida de 400ms para evitar lag visual
-            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 400, null);
+            // Reduzido para 200ms para evitar conflito com atualizações rápidas do GPS
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 200, null);
         } else {
-            // Animação rápida também para o modo North Up
-            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng), 400, null);
+            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng), 200, null);
         }
 
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", distanciaTotal / 1000));
 
-        float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
-        float calorias = (distanciaTotal / 1000) * peso * 1.036f;
+        // Usa a variável em memória (pesoUsuario) em vez de ler do disco
+        float calorias = (distanciaTotal / 1000) * pesoUsuario * 1.036f;
         tvCalorias.setText(String.format(Locale.getDefault(), "Calorias: %.1f kcal", calorias));
     }
 
-    //Funcao para o dialogo de salvar trilha.
     private void showSaveDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Salvar Trilha");
@@ -262,45 +256,79 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         builder.show();
     }
 
-    //Funcao para salvar a trilha.
     private void salvarTrilha(String nome) {
-        trilhasDAO.open();
-        Trilha trilha = new Trilha();
-        trilha.setNome(nome);
-        trilha.setDataHoraInicio(dataHoraInicio);
-        trilha.setDataHoraFim(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
-        trilha.setDistanciaTotal(distanciaTotal / 1000);
+        // Bloqueia botões e avisa o utilizador
+        btnParar.setEnabled(false);
+        Toast.makeText(this, "A salvar trilha...", Toast.LENGTH_SHORT).show();
 
-        long tempoDecorridoMillis = SystemClock.elapsedRealtime() - chronometer.getBase();
-        long tempoDecorridoSegundos = tempoDecorridoMillis / 1000;
-        float velocidadeMedia = (tempoDecorridoSegundos > 0) ? (distanciaTotal / tempoDecorridoSegundos) * 3.6f : 0;
-        trilha.setVelocidadeMedia(velocidadeMedia);
+        // --- PASSO 1: CAPTURAR DADOS DA UI (NA THREAD PRINCIPAL) ---
+        // Temos de ler estas propriedades AQUI, antes de entrar na thread secundária
+        final int mapType = googleMap.getMapType();
+        final long baseCronometro = chronometer.getBase();
+        final long tempoAtual = SystemClock.elapsedRealtime(); // Captura o tempo exato do clique
 
-        trilha.setVelocidadeMaxima(velocidadeMaxima);
+        // Fazemos uma cópia segura da lista de pontos para a outra thread não dar erro se o GPS atualizar
+        final List<LatLng> percursoSeguro = new ArrayList<>(percurso);
 
-        // Calcula e salva a duração
-        long horas = TimeUnit.MILLISECONDS.toHours(tempoDecorridoMillis);
-        long minutos = TimeUnit.MILLISECONDS.toMinutes(tempoDecorridoMillis) % 60;
-        long segundos = TimeUnit.MILLISECONDS.toSeconds(tempoDecorridoMillis) % 60;
-        String duracao = String.format(Locale.getDefault(), "%02dh %02dm %02ds", horas, minutos, segundos);
-        trilha.setDuracao(duracao);
+        final String dataFim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-        trilha.setCoordenadas(new ArrayList<>(percurso));
+        // --- PASSO 2: INICIAR O TRABALHO PESADO EM SEGUNDO PLANO ---
+        new Thread(() -> {
+            try {
+                trilhasDAO.open();
+                Trilha trilha = new Trilha();
+                trilha.setNome(nome);
+                trilha.setDataHoraInicio(dataHoraInicio);
+                trilha.setDataHoraFim(dataFim);
+                trilha.setDistanciaTotal(distanciaTotal / 1000);
 
-        float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
-        float calorias = (distanciaTotal / 1000) * peso * 1.036f;
-        trilha.setGastoCalorico(calorias);
+                // Cálculos matemáticos (seguro fazer em background)
+                long tempoDecorridoMillis = tempoAtual - baseCronometro;
+                long tempoDecorridoSegundos = tempoDecorridoMillis / 1000;
+                float velocidadeMedia = (tempoDecorridoSegundos > 0) ? (distanciaTotal / tempoDecorridoSegundos) * 3.6f : 0;
+                trilha.setVelocidadeMedia(velocidadeMedia);
 
-        trilha.setMapType(googleMap.getMapType());
+                trilha.setVelocidadeMaxima(velocidadeMaxima);
 
-        long id = trilhasDAO.inserirTrilha(trilha);
-        trilhasDAO.close();
+                long horas = TimeUnit.MILLISECONDS.toHours(tempoDecorridoMillis);
+                long minutos = TimeUnit.MILLISECONDS.toMinutes(tempoDecorridoMillis) % 60;
+                long segundos = TimeUnit.MILLISECONDS.toSeconds(tempoDecorridoMillis) % 60;
+                String duracao = String.format(Locale.getDefault(), "%02dh %02dm %02ds", horas, minutos, segundos);
+                trilha.setDuracao(duracao);
 
-        if (id != -1) {
-            Toast.makeText(this, "Trilha \"" + nome + "\" salva com sucesso!", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "Erro ao salvar a trilha.", Toast.LENGTH_SHORT).show();
-        }
+                // Usa a lista segura que copiamos lá em cima
+                trilha.setCoordenadas(percursoSeguro);
+
+                // Usa o peso que já está na memória
+                float calorias = (distanciaTotal / 1000) * pesoUsuario * 1.036f;
+                trilha.setGastoCalorico(calorias);
+
+                // Usa o tipo de mapa capturado antes da thread
+                trilha.setMapType(mapType);
+
+                long id = trilhasDAO.inserirTrilha(trilha);
+                trilhasDAO.close();
+
+                // Volta para a Thread Principal SÓ para mostrar o sucesso
+                runOnUiThread(() -> {
+                    if (id != -1) {
+                        Toast.makeText(RegistrarTrilhaActivity.this, "Trilha \"" + nome + "\" salva com sucesso!", Toast.LENGTH_LONG).show();
+                        finish();
+                    } else {
+                        btnParar.setEnabled(true);
+                        Toast.makeText(RegistrarTrilhaActivity.this, "Erro ao salvar a trilha no banco.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                final String mensagemErro = e.getMessage();
+                runOnUiThread(() -> {
+                    btnParar.setEnabled(true);
+                    Toast.makeText(RegistrarTrilhaActivity.this, "Erro Crítico: " + mensagemErro, Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
     }
 
     @Override
@@ -315,7 +343,13 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     }
 
     @Override
-    protected void onResume() { super.onResume(); mapView.onResume(); }
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+        // Recarrega as configurações (incluindo o peso) ao voltar para a tela
+        aplicarConfiguracoesDoMapa();
+    }
+
     @Override
     protected void onStart() { super.onStart(); mapView.onStart(); }
     @Override

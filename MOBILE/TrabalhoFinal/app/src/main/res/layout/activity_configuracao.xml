@@ -3,15 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#F5F5F5">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_configuracao"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:titleTextColor="@android:color/white" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -21,94 +22,106 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_nome_usuario"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Nome do usuário" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:suffixText="kg">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_peso"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Peso"
-                    android:inputType="numberDecimal" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:suffixText="m">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_altura"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Altura"
-                    android:inputType="numberDecimal" />
-            </com.google.android.material.textfield.TextInputLayout>
+            android:padding="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Sexo" />
+                android:text="Dados Corporais"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="16dp"
+                android:textColor="#333333"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <EditText
+                    android:id="@+id/et_peso"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Peso (kg)"
+                    android:inputType="numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <EditText
+                    android:id="@+id/et_altura"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Altura (m)"
+                    android:inputType="number"
+                     />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <EditText
+                    android:id="@+id/et_data_nascimento"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Data de Nascimento (DD/MM/AAAA)"
+                    android:inputType="number"
+                    android:maxLength="10" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sexo"
+                android:layout_marginBottom="4dp"
+                android:textColor="#666666"/>
 
             <Spinner
                 android:id="@+id/spinner_sexo"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp" />
+                android:layout_height="48dp"
+                android:layout_marginBottom="24dp"
+                android:background="@android:drawable/btn_dropdown" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_data_nascimento"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Data de nascimento (dd/mm/aaaa)"
-                    android:inputType="date" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="1dp"
+                android:background="#DDDDDD"
+                android:layout_marginBottom="24dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Tipo de Mapa" />
+                android:text="Preferências de Mapa"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="16dp"
+                android:textColor="#333333"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tipo de Mapa"
+                android:layout_marginBottom="8dp"/>
 
             <RadioGroup
                 android:id="@+id/rg_tipo_mapa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
 
                 <RadioButton
                     android:id="@+id/rb_vetorial"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Vetorial" />
+                    android:text="Vetorial"
+                    android:layout_marginEnd="16dp"/>
 
                 <RadioButton
                     android:id="@+id/rb_satelite"
@@ -118,22 +131,24 @@
             </RadioGroup>
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Navegação do Mapa" />
+                android:text="Forma de Navegação"
+                android:layout_marginBottom="8dp"/>
 
             <RadioGroup
                 android:id="@+id/rg_forma_navegacao"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="32dp">
 
                 <RadioButton
                     android:id="@+id/rb_north_up"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="North Up" />
+                    android:text="North Up"
+                    android:layout_marginEnd="16dp"/>
 
                 <RadioButton
                     android:id="@+id/rb_course_up"
@@ -144,11 +159,11 @@
 
             <Button
                 android:id="@+id/btn_salvar_configuracoes"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:text="Salvar" />
+                android:text="Salvar Configurações"
+                android:backgroundTint="@color/purple_500"
+                android:textColor="@android:color/white"/>
 
         </LinearLayout>
     </ScrollView>
