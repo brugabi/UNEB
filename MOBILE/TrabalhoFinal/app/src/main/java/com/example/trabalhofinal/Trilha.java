@@ -1,18 +1,24 @@
 package com.example.trabalhofinal;
 
+import com.google.android.gms.maps.model.LatLng;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Trilha {
     private long id;
     private String nome;
     private String dataHoraInicio;
     private String dataHoraFim;
+    private String duracao; // NOVO CAMPO
     private float gastoCalorico;
     private float velocidadeMedia;
     private float velocidadeMaxima;
     private float distanciaTotal;
-    private String percurso;
-    private int mapType; // NOVO CAMPO
+    private List<LatLng> coordenadas;
+    private int mapType;
 
     public Trilha() {
+        this.coordenadas = new ArrayList<>();
     }
 
     // Getters e Setters
@@ -49,6 +55,14 @@ public class Trilha {
         this.dataHoraFim = dataHoraFim;
     }
 
+    public String getDuracao() {
+        return duracao;
+    }
+
+    public void setDuracao(String duracao) {
+        this.duracao = duracao;
+    }
+
     public float getGastoCalorico() {
         return gastoCalorico;
     }
@@ -81,12 +95,12 @@ public class Trilha {
         this.distanciaTotal = distanciaTotal;
     }
 
-    public String getPercurso() {
-        return percurso;
+    public List<LatLng> getCoordenadas() {
+        return coordenadas;
     }
 
-    public void setPercurso(String percurso) {
-        this.percurso = percurso;
+    public void setCoordenadas(List<LatLng> coordenadas) {
+        this.coordenadas = coordenadas;
     }
 
     public int getMapType() {

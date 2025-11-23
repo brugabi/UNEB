@@ -10,6 +10,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.InputType;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.EditText;
@@ -24,6 +25,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -38,13 +40,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallback {
 
     private MapView mapView;
     private GoogleMap googleMap;
     private Button btnIniciar, btnParar;
-    private TextView tvVelocidade, tvDistancia, tvCalorias;
+    private TextView tvVelocidade, tvVelocidadeMaxima, tvDistancia, tvCalorias;
     private Chronometer chronometer;
 
     private FusedLocationProviderClient fusedLocationClient;
@@ -64,6 +67,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    /*Funcao da tela principal com os botoes e o mapview */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +77,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         btnIniciar = findViewById(R.id.btn_iniciar_trilha);
         btnParar = findViewById(R.id.btn_parar_trilha);
         tvVelocidade = findViewById(R.id.tv_velocidade);
+        tvVelocidadeMaxima = findViewById(R.id.tv_velocidade_maxima);
         tvDistancia = findViewById(R.id.tv_distancia);
         tvCalorias = findViewById(R.id.tv_calorias);
         chronometer = findViewById(R.id.chronometer);
@@ -97,6 +102,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         enableMyLocation();
     }
 
+    /*Funcao para aplicar as configuracoes do mapa, satelite ou vetorial, e o tipo de navegacao, northup ou courseup, selecionado pelo usuário */
     private void aplicarConfiguracoesDoMapa() {
         if (googleMap == null) return;
 
@@ -111,6 +117,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
+    //Funcao para permicao de acesso a localizacao
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (googleMap != null) {
@@ -126,6 +133,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
+    /*Funcao de iniciar o percurso com o traçado dele e o cronometro */
     private void startTracking() {
         if (isTracking) return;
         isTracking = true;
@@ -135,6 +143,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         percurso.clear();
         distanciaTotal = 0;
         velocidadeMaxima = 0;
+        tvVelocidadeMaxima.setText("Vel. Máxima: 0 km/h");
         ultimaLocalizacao = null;
         if (polyline != null) polyline.remove();
         polyline = googleMap.addPolyline(new PolylineOptions().color(Color.BLUE).width(10));
@@ -148,6 +157,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         }
     }
 
+    /*Para o percurso e verifica se é a distancia e significativa, maior que 1 metro, para salvar a trilha */
     private void stopTracking() {
         if (!isTracking) return;
         isTracking = false;
@@ -165,12 +175,13 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
     }
 
     private void createLocationRequest() {
-        locationRequest = LocationRequest.create();
-        locationRequest.setInterval(5000);
-        locationRequest.setFastestInterval(2000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // Intervalo reduzido para 500ms (0.5s) para maior fluidez no Course Up
+        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
+                .setMinUpdateIntervalMillis(250)
+                .build();
     }
 
+    // Callback para aguardar o Android enviar novas atualizacoes de localizacao
     private void createLocationCallback() {
         locationCallback = new LocationCallback() {
             @Override
@@ -185,9 +196,27 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         };
     }
 
+    /* Funcao de dar update calculando a velocidade, as calorias e a distancia percorrida.
+    * Atualiza o mapa conforme as preferencias do usuario, se for corse up navigation mode da update na camera*/
     private void updateUI(Location location) {
         if (!isTracking || googleMap == null) return;
 
+        float velocidadeAtual = location.getSpeed() * 3.6f;
+
+        tvVelocidade.setText(String.format(Locale.getDefault(), "Velocidade: %.1f km/h", velocidadeAtual));
+
+        if (velocidadeAtual > velocidadeMaxima) {
+            velocidadeMaxima = velocidadeAtual;
+            tvVelocidadeMaxima.setText(String.format(Locale.getDefault(), "Vel. Máxima: %.1f km/h", velocidadeMaxima));
+        }
+
+        if (ultimaLocalizacao != null) {
+            float distanciaTrecho = ultimaLocalizacao.distanceTo(location);
+            distanciaTotal += distanciaTrecho;
+        }
+        ultimaLocalizacao = location;
+
+        // Atualiza o mapa e calorias
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         percurso.add(latLng);
         polyline.setPoints(percurso);
@@ -199,17 +228,13 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
                     .bearing(location.getBearing())
                     .tilt(45.0f)
                     .build();
-            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            // Animação rápida de 400ms para evitar lag visual
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 400, null);
         } else {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+            // Animação rápida também para o modo North Up
+            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng), 400, null);
         }
 
-        float velocidadeAtual = location.getSpeed() * 3.6f;
-        tvVelocidade.setText(String.format(Locale.getDefault(), "Velocidade: %.1f km/h", velocidadeAtual));
-        if (velocidadeAtual > velocidadeMaxima) velocidadeMaxima = velocidadeAtual;
-
-        if (ultimaLocalizacao != null) distanciaTotal += ultimaLocalizacao.distanceTo(location);
-        ultimaLocalizacao = location;
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", distanciaTotal / 1000));
 
         float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
@@ -217,6 +242,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         tvCalorias.setText(String.format(Locale.getDefault(), "Calorias: %.1f kcal", calorias));
     }
 
+    //Funcao para o dialogo de salvar trilha.
     private void showSaveDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Salvar Trilha");
@@ -236,6 +262,7 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         builder.show();
     }
 
+    //Funcao para salvar a trilha.
     private void salvarTrilha(String nome) {
         trilhasDAO.open();
         Trilha trilha = new Trilha();
@@ -243,13 +270,22 @@ public class RegistrarTrilhaActivity extends Activity implements OnMapReadyCallb
         trilha.setDataHoraInicio(dataHoraInicio);
         trilha.setDataHoraFim(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
         trilha.setDistanciaTotal(distanciaTotal / 1000);
-        trilha.setVelocidadeMaxima(velocidadeMaxima);
 
-        long tempoDecorridoSegundos = (SystemClock.elapsedRealtime() - chronometer.getBase()) / 1000;
+        long tempoDecorridoMillis = SystemClock.elapsedRealtime() - chronometer.getBase();
+        long tempoDecorridoSegundos = tempoDecorridoMillis / 1000;
         float velocidadeMedia = (tempoDecorridoSegundos > 0) ? (distanciaTotal / tempoDecorridoSegundos) * 3.6f : 0;
         trilha.setVelocidadeMedia(velocidadeMedia);
 
-        trilha.setPercurso(percurso.toString());
+        trilha.setVelocidadeMaxima(velocidadeMaxima);
+
+        // Calcula e salva a duração
+        long horas = TimeUnit.MILLISECONDS.toHours(tempoDecorridoMillis);
+        long minutos = TimeUnit.MILLISECONDS.toMinutes(tempoDecorridoMillis) % 60;
+        long segundos = TimeUnit.MILLISECONDS.toSeconds(tempoDecorridoMillis) % 60;
+        String duracao = String.format(Locale.getDefault(), "%02dh %02dm %02ds", horas, minutos, segundos);
+        trilha.setDuracao(duracao);
+
+        trilha.setCoordenadas(new ArrayList<>(percurso));
 
         float peso = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0).getFloat("peso", 70f);
         float calorias = (distanciaTotal / 1000) * peso * 1.036f;

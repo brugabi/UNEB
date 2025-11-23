@@ -2,7 +2,6 @@ package com.example.trabalhofinal;
 
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.Button;
@@ -25,14 +24,12 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private MapView mapView;
     private GoogleMap googleMap;
-    private TextView tvNome, tvDataInicio, tvDataFim, tvDistancia, tvVelMedia, tvVelMaxima, tvCalorias;
+    private TextView tvNome, tvDataInicio, tvDataFim, tvDuracao, tvDistancia, tvVelMedia, tvVelMaxima, tvCalorias;
     private Button btnCompartilhar, btnEditarNome, btnApagarTrilha;
 
     private TrilhasDAO trilhasDAO;
@@ -54,10 +51,10 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
             return;
         }
 
-        // --- Inicialização de Views ---
         tvNome = findViewById(R.id.tv_detalhes_nome);
         tvDataInicio = findViewById(R.id.tv_detalhes_data_inicio);
         tvDataFim = findViewById(R.id.tv_detalhes_data_fim);
+        tvDuracao = findViewById(R.id.tv_detalhes_duracao);
         tvDistancia = findViewById(R.id.tv_detalhes_distancia);
         tvVelMedia = findViewById(R.id.tv_detalhes_velocidade_media);
         tvVelMaxima = findViewById(R.id.tv_detalhes_velocidade_maxima);
@@ -98,6 +95,8 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         tvNome.setText("Nome: " + trilha.getNome());
         tvDataInicio.setText("Início: " + trilha.getDataHoraInicio());
         tvDataFim.setText("Fim: " + trilha.getDataHoraFim());
+        // Exibindo a duração salva diretamente do objeto
+        tvDuracao.setText("Duração: " + (trilha.getDuracao() != null ? trilha.getDuracao() : "--"));
         tvDistancia.setText(String.format(Locale.getDefault(), "Distância: %.2f km", trilha.getDistanciaTotal()));
         tvVelMedia.setText(String.format(Locale.getDefault(), "Vel. Média: %.1f km/h", trilha.getVelocidadeMedia()));
         tvVelMaxima.setText(String.format(Locale.getDefault(), "Vel. Máxima: %.1f km/h", trilha.getVelocidadeMaxima()));
@@ -107,21 +106,10 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
-        aplicarConfiguracoesDoMapa(); // APLICA A CONFIGURAÇÃO DO TIPO DE MAPA
-        desenharPercurso();
-    }
-
-    private void aplicarConfiguracoesDoMapa() {
-        if (googleMap == null) return;
-
-        SharedPreferences settings = getSharedPreferences(ConfiguracaoActivity.PREFS_NAME, 0);
-        int mapTypeId = settings.getInt("tipoMapa", R.id.rb_vetorial);
-
-        if (mapTypeId == R.id.rb_satelite) {
-            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        } else {
-            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        if (trilha != null) {
+            googleMap.setMapType(trilha.getMapType());
         }
+        desenharPercurso();
     }
 
     private void mostrarDialogoEditar() {
@@ -165,8 +153,10 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
     }
 
     private void desenharPercurso() {
-        if (googleMap == null || trilha.getPercurso() == null || trilha.getPercurso().isEmpty()) return;
-        List<LatLng> percursoPoints = parsePercursoString(trilha.getPercurso());
+        if (googleMap == null || trilha.getCoordenadas() == null || trilha.getCoordenadas().isEmpty()) return;
+        
+        List<LatLng> percursoPoints = trilha.getCoordenadas();
+
         if (percursoPoints.size() > 1) {
             PolylineOptions polylineOptions = new PolylineOptions().addAll(percursoPoints).color(0xFF0000FF).width(10);
             googleMap.addPolyline(polylineOptions);
@@ -189,13 +179,15 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
                 .setItems(formatos, (dialog, which) -> {
                     String formatoEscolhido = formatos[which];
                     String dadosParaCompartilhar = gerarDados(formatoEscolhido);
-                    compartilharTexto(dadosParaCompartilhar, formatoEscolhido);
+                    compartilharTexto(dadosParaCompartilhar);
                 })
                 .show();
     }
 
     private String gerarDados(String formato) {
-        List<LatLng> percurso = parsePercursoString(trilha.getPercurso());
+        List<LatLng> percurso = trilha.getCoordenadas();
+        if (percurso == null) percurso = new ArrayList<>();
+        
         switch (formato) {
             case "GPX": return gerarGPX(percurso);
             case "KML": return gerarKML(percurso);
@@ -205,7 +197,7 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         }
     }
 
-    private void compartilharTexto(String texto, String formato) {
+    private void compartilharTexto(String texto) {
         Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, texto);
@@ -214,68 +206,68 @@ public class DetalhesTrilhaActivity extends AppCompatActivity implements OnMapRe
         startActivity(Intent.createChooser(sendIntent, "Compartilhar Trilha via"));
     }
 
+    private String getDescricaoTrilha() {
+        String duracao = trilha.getDuracao() != null ? trilha.getDuracao() : "--";
+        return String.format(Locale.getDefault(),
+                "Início: %s\nFim: %s\nDuração: %s\nDistância: %.2f km\nVel. Média: %.1f km/h\nVel. Máxima: %.1f km/h\nCalorias: %.1f kcal",
+                trilha.getDataHoraInicio(), trilha.getDataHoraFim(), duracao,
+                trilha.getDistanciaTotal(), trilha.getVelocidadeMedia(),
+                trilha.getVelocidadeMaxima(), trilha.getGastoCalorico());
+    }
+
     private String gerarGPX(List<LatLng> percurso) {
-        StringBuilder gpx = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        gpx.append("<gpx version=\"1.1\" creator=\"TrilhasApp\">\n");
-        gpx.append("  <trk>\n");
-        gpx.append("    <name>").append(trilha.getNome()).append("</name>\n");
-        gpx.append("    <trkseg>\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        sb.append("<gpx version=\"1.1\" creator=\"TrilhasApp\" xmlns=\"http://www.topografix.com/GPX/1/1\">\n");
+        sb.append("  <trk>\n");
+        sb.append("    <name>").append(trilha.getNome() != null ? trilha.getNome() : "Trilha").append("</name>\n");
+        sb.append("    <desc>").append(getDescricaoTrilha().replace("\n", ", ")).append("</desc>\n");
+        sb.append("    <trkseg>\n");
         for (LatLng ponto : percurso) {
-            gpx.append("      <trkpt lat=\"").append(ponto.latitude).append("\" lon=\"").append(ponto.longitude).append("\"></trkpt>\n");
+            sb.append("      <trkpt lat=\"").append(ponto.latitude).append("\" lon=\"").append(ponto.longitude).append("\" />\n");
         }
-        gpx.append("    </trkseg>\n");
-        gpx.append("  </trk>\n");
-        gpx.append("</gpx>\n");
-        return gpx.toString();
+        sb.append("    </trkseg>\n");
+        sb.append("  </trk>\n");
+        sb.append("</gpx>");
+        return sb.toString();
     }
 
     private String gerarKML(List<LatLng> percurso) {
-        StringBuilder kml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        kml.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
-        kml.append("  <Document>\n");
-        kml.append("    <name>").append(trilha.getNome()).append("</name>\n");
-        kml.append("    <Placemark>\n");
-        kml.append("      <name>Percurso</name>\n");
-        kml.append("      <LineString>\n");
-        kml.append("        <coordinates>\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        sb.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
+        sb.append("  <Document>\n");
+        sb.append("    <name>").append(trilha.getNome() != null ? trilha.getNome() : "Trilha").append("</name>\n");
+        sb.append("    <Placemark>\n");
+        sb.append("      <name>Percurso</name>\n");
+        sb.append("      <description>").append(getDescricaoTrilha()).append("</description>\n");
+        sb.append("      <LineString>\n");
+        sb.append("        <coordinates>\n");
         for (LatLng ponto : percurso) {
-            kml.append("          ").append(ponto.longitude).append(",").append(ponto.latitude).append(",0\n");
+            sb.append("          ").append(ponto.longitude).append(",").append(ponto.latitude).append(",0\n");
         }
-        kml.append("        </coordinates>\n");
-        kml.append("      </LineString>\n");
-        kml.append("    </Placemark>\n");
-        kml.append("  </Document>\n");
-        kml.append("</kml>\n");
-        return kml.toString();
+        sb.append("        </coordinates>\n");
+        sb.append("      </LineString>\n");
+        sb.append("    </Placemark>\n");
+        sb.append("  </Document>\n");
+        sb.append("</kml>");
+        return sb.toString();
     }
 
     private String gerarJSON() {
+        // Agora o Gson serializa a duração automaticamente porque ela está no objeto Trilha
         return new Gson().toJson(trilha);
     }
 
     private String gerarCSV(List<LatLng> percurso) {
-        StringBuilder csv = new StringBuilder("latitude,longitude\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("# Nome: ").append(trilha.getNome()).append("\n");
+        sb.append("# ").append(getDescricaoTrilha().replace("\n", "\n# ")).append("\n");
+        sb.append("latitude,longitude\n");
         for (LatLng ponto : percurso) {
-            csv.append(ponto.latitude).append(",").append(ponto.longitude).append("\n");
+            sb.append(ponto.latitude).append(",").append(ponto.longitude).append("\n");
         }
-        return csv.toString();
-    }
-
-    private List<LatLng> parsePercursoString(String percursoStr) {
-        List<LatLng> latLngs = new ArrayList<>();
-        if (percursoStr == null || percursoStr.isEmpty()) return latLngs;
-        Pattern pattern = Pattern.compile("\\(([-+]?[0-9]*\\.[0-9]+),([-+]?[0-9]*\\.[0-9]+)\\)");
-        Matcher matcher = pattern.matcher(percursoStr);
-        while (matcher.find()) {
-            try {
-                double lat = Double.parseDouble(matcher.group(1));
-                double lng = Double.parseDouble(matcher.group(2));
-                latLngs.add(new LatLng(lat, lng));
-            } catch (Exception e) {
-                // Ignora pontos malformados
-            }
-        }
-        return latLngs;
+        return sb.toString();
     }
 
     @Override

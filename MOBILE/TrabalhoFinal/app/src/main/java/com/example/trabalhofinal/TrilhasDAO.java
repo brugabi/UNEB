@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,24 +29,44 @@ public class TrilhasDAO {
     }
 
     public long inserirTrilha(Trilha trilha) {
-        ContentValues values = new ContentValues();
-        values.put(TrilhasDBHelper.COLUMN_NOME, trilha.getNome());
-        values.put(TrilhasDBHelper.COLUMN_DATA_HORA_INICIO, trilha.getDataHoraInicio());
-        values.put(TrilhasDBHelper.COLUMN_DATA_HORA_FIM, trilha.getDataHoraFim());
-        values.put(TrilhasDBHelper.COLUMN_GASTO_CALORICO, trilha.getGastoCalorico());
-        values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MEDIA, trilha.getVelocidadeMedia());
-        values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MAXIMA, trilha.getVelocidadeMaxima());
-        values.put(TrilhasDBHelper.COLUMN_DISTANCIA_TOTAL, trilha.getDistanciaTotal());
-        values.put(TrilhasDBHelper.COLUMN_PERCURSO, trilha.getPercurso());
-        values.put(TrilhasDBHelper.COLUMN_MAP_TYPE, trilha.getMapType()); // SALVA O TIPO DE MAPA
+        db.beginTransaction();
+        long trilhaId = -1;
+        try {
+            ContentValues values = new ContentValues();
+            values.put(TrilhasDBHelper.COLUMN_NOME, trilha.getNome());
+            values.put(TrilhasDBHelper.COLUMN_DATA_HORA_INICIO, trilha.getDataHoraInicio());
+            values.put(TrilhasDBHelper.COLUMN_DATA_HORA_FIM, trilha.getDataHoraFim());
+            values.put(TrilhasDBHelper.COLUMN_DURACAO, trilha.getDuracao()); // SALVANDO DURAÇÃO
+            values.put(TrilhasDBHelper.COLUMN_GASTO_CALORICO, trilha.getGastoCalorico());
+            values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MEDIA, trilha.getVelocidadeMedia());
+            values.put(TrilhasDBHelper.COLUMN_VELOCIDADE_MAXIMA, trilha.getVelocidadeMaxima());
+            values.put(TrilhasDBHelper.COLUMN_DISTANCIA_TOTAL, trilha.getDistanciaTotal());
+            values.put(TrilhasDBHelper.COLUMN_MAP_TYPE, trilha.getMapType());
 
-        return db.insert(TrilhasDBHelper.TABLE_TRILHAS, null, values);
+            trilhaId = db.insert(TrilhasDBHelper.TABLE_TRILHAS, null, values);
+
+            if (trilhaId != -1 && trilha.getCoordenadas() != null) {
+                List<LatLng> coordenadas = trilha.getCoordenadas();
+                for (int i = 0; i < coordenadas.size(); i++) {
+                    LatLng ponto = coordenadas.get(i);
+                    ContentValues pontoValues = new ContentValues();
+                    pontoValues.put(TrilhasDBHelper.COLUMN_TRILHA_ID, trilhaId);
+                    pontoValues.put(TrilhasDBHelper.COLUMN_LATITUDE, ponto.latitude);
+                    pontoValues.put(TrilhasDBHelper.COLUMN_LONGITUDE, ponto.longitude);
+                    pontoValues.put(TrilhasDBHelper.COLUMN_ORDEM, i);
+                    db.insert(TrilhasDBHelper.TABLE_PONTOS, null, pontoValues);
+                }
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        return trilhaId;
     }
 
     public int atualizarTrilha(Trilha trilha) {
         ContentValues values = new ContentValues();
         values.put(TrilhasDBHelper.COLUMN_NOME, trilha.getNome());
-        // O tipo de mapa não deve ser editado, então não é incluído aqui
         return db.update(TrilhasDBHelper.TABLE_TRILHAS, values, TrilhasDBHelper.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(trilha.getId())});
     }
@@ -80,7 +102,7 @@ public class TrilhasDAO {
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            Trilha trilha = cursorToTrilha(cursor);
+            Trilha trilha = cursorToTrilha(cursor, false);
             trilhas.add(trilha);
             cursor.moveToNext();
         }
@@ -96,7 +118,7 @@ public class TrilhasDAO {
         if (cursor != null) {
             try {
                 if (cursor.moveToFirst()) {
-                    return cursorToTrilha(cursor);
+                    return cursorToTrilha(cursor, true);
                 }
             } finally {
                 cursor.close();
@@ -105,18 +127,43 @@ public class TrilhasDAO {
         return null;
     }
 
-    private Trilha cursorToTrilha(Cursor cursor) {
+    private Trilha cursorToTrilha(Cursor cursor, boolean carregarPontos) {
         Trilha trilha = new Trilha();
-        trilha.setId(cursor.getLong(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_ID)));
+        long trilhaId = cursor.getLong(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_ID));
+        trilha.setId(trilhaId);
         trilha.setNome(cursor.getString(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_NOME)));
         trilha.setDataHoraInicio(cursor.getString(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_DATA_HORA_INICIO)));
         trilha.setDataHoraFim(cursor.getString(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_DATA_HORA_FIM)));
+        trilha.setDuracao(cursor.getString(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_DURACAO))); // CARREGANDO DURAÇÃO
         trilha.setGastoCalorico(cursor.getFloat(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_GASTO_CALORICO)));
         trilha.setVelocidadeMedia(cursor.getFloat(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_VELOCIDADE_MEDIA)));
         trilha.setVelocidadeMaxima(cursor.getFloat(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_VELOCIDADE_MAXIMA)));
         trilha.setDistanciaTotal(cursor.getFloat(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_DISTANCIA_TOTAL)));
-        trilha.setPercurso(cursor.getString(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_PERCURSO)));
-        trilha.setMapType(cursor.getInt(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_MAP_TYPE))); // CARREGA O TIPO DE MAPA
+        trilha.setMapType(cursor.getInt(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_MAP_TYPE)));
+
+        if (carregarPontos) {
+            trilha.setCoordenadas(getPontosDaTrilha(trilhaId));
+        }
+
         return trilha;
+    }
+
+    private List<LatLng> getPontosDaTrilha(long trilhaId) {
+        List<LatLng> pontos = new ArrayList<>();
+        Cursor cursor = db.query(TrilhasDBHelper.TABLE_PONTOS,
+                new String[]{TrilhasDBHelper.COLUMN_LATITUDE, TrilhasDBHelper.COLUMN_LONGITUDE},
+                TrilhasDBHelper.COLUMN_TRILHA_ID + " = ?",
+                new String[]{String.valueOf(trilhaId)},
+                null, null, TrilhasDBHelper.COLUMN_ORDEM + " ASC");
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            double lat = cursor.getDouble(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_LATITUDE));
+            double lng = cursor.getDouble(cursor.getColumnIndexOrThrow(TrilhasDBHelper.COLUMN_LONGITUDE));
+            pontos.add(new LatLng(lat, lng));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return pontos;
     }
 }

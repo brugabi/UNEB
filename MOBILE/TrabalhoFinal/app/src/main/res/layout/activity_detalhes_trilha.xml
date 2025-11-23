@@ -1,113 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_detalhes"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="16dp">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_detalhes"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mapView_detalhes"
+            android:layout_width="match_parent"
+            android:layout_height="300dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:padding="16dp">
 
-            <com.google.android.gms.maps.MapView
-                android:id="@+id/mapView_detalhes"
-                android:layout_width="match_parent"
-                android:layout_height="300dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tv_detalhes_nome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Nome: "
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tv_detalhes_data_inicio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Início: " />
-
-                <TextView
-                    android:id="@+id/tv_detalhes_data_fim"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Fim: " />
-
-                <TextView
-                    android:id="@+id/tv_detalhes_distancia"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Distância: " />
-
-                <TextView
-                    android:id="@+id/tv_detalhes_velocidade_media"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Vel. Média: " />
-
-                <TextView
-                    android:id="@+id/tv_detalhes_velocidade_maxima"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Vel. Máxima: " />
-
-                <TextView
-                    android:id="@+id/tv_detalhes_gasto_calorico"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Calorias: " />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btn_editar_nome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:text="Editar Nome" />
-
-                <Button
-                    android:id="@+id/btn_apagar_trilha"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Apagar Trilha" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btn_compartilhar"
+            <TextView
+                android:id="@+id/tv_detalhes_nome"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:text="Compartilhar" />
+                android:text="Nome: "
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/tv_detalhes_data_inicio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Início: " />
+
+            <TextView
+                android:id="@+id/tv_detalhes_data_fim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fim: " />
+
+            <TextView
+                android:id="@+id/tv_detalhes_duracao"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Duração: " />
+
+            <TextView
+                android:id="@+id/tv_detalhes_distancia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Distância: " />
+
+            <TextView
+                android:id="@+id/tv_detalhes_velocidade_media"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vel. Média: " />
+
+            <TextView
+                android:id="@+id/tv_detalhes_velocidade_maxima"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vel. Máxima: " />
+
+            <TextView
+                android:id="@+id/tv_detalhes_gasto_calorico"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Calorias: " />
         </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_editar_nome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Editar Nome" />
+
+            <Button
+                android:id="@+id/btn_apagar_trilha"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Apagar Trilha" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_compartilhar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="Compartilhar" />
+
+    </LinearLayout>
+</ScrollView>

@@ -12,6 +12,8 @@ import androidx.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 
+/* Adapta a lista de dados (Trilha) para um formato
+que a ListView consegue entender e exibir visualmente, um item de cada vez. */
 public class TrilhaAdapter extends ArrayAdapter<Trilha> {
 
     public TrilhaAdapter(@NonNull Context context, @NonNull List<Trilha> trilhas) {
