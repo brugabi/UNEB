@@ -1,0 +1,5 @@
+D W
+A B 1
+B C -3
+C A 1
+C D 2

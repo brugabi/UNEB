@@ -1,0 +1,60 @@
+
+# macOS / OS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# JetBrains IDEs (IntelliJ IDEA, Android Studio, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse IDE
+.metadata/
+.classpath
+.project
+.settings/
+
+# Java / Maven / Gradle
+target/
+bin/
+*.class
+.gradle/
+build/
+local.properties
+Captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.dex
+
+# Python (virtual environments, caches, compiled files)
+venv/
+.venv/
+env/
+.env
+.env.*
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
