@@ -59,6 +59,8 @@ nx.combinatorial_embedding_to_pos(embedding)
 
 Assim, a imagem gerada usa a estrutura planar retornada pelo teste, e não um layout genérico.
 
+O código configura o Matplotlib com o backend `Agg` para salvar a imagem diretamente em arquivo. Isso evita dependência de janela gráfica no ambiente de execução e não altera o embedding usado no desenho.
+
 ## Subgrafo de Kuratowski
 
 Quando o grafo não é planar, `nx.check_planarity(G, True)` retorna um subgrafo que prova a não planaridade. O programa exibe:

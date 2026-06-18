@@ -7,6 +7,9 @@ os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-codigo-base")
 os.environ.setdefault("XDG_CACHE_HOME", "/tmp/codigo-base-cache")
 
 import networkx as nx
+import matplotlib
+
+matplotlib.use("Agg")
 
 
 def ler_grafo_arquivo(nome_arquivo):
